@@ -8,7 +8,8 @@
 :root{
   --bg:#f7f8fa; --panel:#ffffff; --text:#1a1d23; --muted:#6b7280; --border:#e2e5ea;
   --accent:#2563eb; --accent-fg:#ffffff; --head:#eef2ff; --proc:#f8fafc;
-  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --success:#059669; --warn:#d97706; --danger:#dc2626;
+  box-sizing:border-box;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -16,25 +17,23 @@
     --accent:#3b82f6; --accent-fg:#0b1020; --head:#20263a; --proc:#20232b;
   }
 }
-:root[data-theme="dark"]{
-  --bg:#14161a; --panel:#1c1f26; --text:#e8eaed; --muted:#9aa1ac; --border:#2c303a;
-  --accent:#3b82f6; --accent-fg:#0b1020; --head:#20263a; --proc:#20232b;
-}
-html{scroll-padding-top:env(safe-area-inset-top,0px);}
+html{scroll-padding-top:0;}
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px;}
-.wrap{max-width:1000px;margin:0 auto;padding:16px;}
+.wrap{max-width:1060px;margin:0 auto;padding:16px;}
 h1{font-size:18px;margin:4px 0 12px;}
 h2{font-size:15px;margin:0 0 10px;}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
 select,input[type=number],input[type=date]{
-  width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px;
+  width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;
+  background:var(--bg);color:var(--text);font-size:14px;
 }
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin-top:10px;}
 table{border-collapse:collapse;width:100%;min-width:520px;}
-th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:6px 8px;text-align:center;white-space:nowrap;font-size:13px;}
+th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);
+  padding:6px 8px;text-align:center;white-space:nowrap;font-size:13px;}
 th:first-child,td:first-child{position:sticky;left:0;background:var(--panel);text-align:left;min-width:130px;}
 thead th{background:var(--head);font-weight:600;}
 tr.orderrow td{font-weight:600;background:var(--head);}
@@ -43,24 +42,31 @@ tr.procrow td:first-child{background:var(--proc);color:var(--muted);font-style:i
 tr.procrow td{background:var(--proc);}
 input[type=number]{padding:4px;width:64px;text-align:center;}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
-button{background:var(--accent);color:var(--accent-fg);border:none;border-radius:6px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+button{background:var(--accent);color:var(--accent-fg);border:none;border-radius:6px;
+  padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
 button.secondary{background:transparent;color:var(--accent);border:1px solid var(--accent);}
+button.danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
 button:disabled{opacity:0.5;cursor:not-allowed;}
 .muted{color:var(--muted);font-size:12px;margin-top:6px;}
 .status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;}
 .count{font-size:12px;color:var(--muted);margin-top:6px;}
 select[multiple]{height:150px;}
 .dropdown{position:relative;}
-.ddbtn{width:100%;text-align:left;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:14px;font-weight:400;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
-.ddpanel{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:20;max-height:280px;overflow-y:auto;padding:8px;}
+.ddbtn{width:100%;text-align:left;background:var(--bg);color:var(--text);
+  border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:14px;
+  font-weight:400;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.ddpanel{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel);
+  border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);
+  z-index:20;max-height:280px;overflow-y:auto;padding:8px;}
 .ddactions{display:flex;gap:8px;margin-bottom:8px;}
 .ddactions button{padding:6px 10px;font-size:12px;}
 .ddopt{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;font-size:13px;}
 .ddopt:hover{background:var(--bg);}
 .ddopt input{width:auto;}
 
-/* Firebase sync indicator */
-.sync-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;font-size:12px;margin-bottom:12px;}
+/* Sync bar */
+.sync-bar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:6px;
+  font-size:12px;margin-bottom:12px;}
 .sync-bar.connecting{background:#fef3c7;color:#92400e;}
 .sync-bar.online{background:#d1fae5;color:#065f46;}
 .sync-bar.error{background:#fee2e2;color:#991b1b;}
@@ -68,19 +74,74 @@ select[multiple]{height:150px;}
 .sync-bar.connecting .sync-dot{background:#f59e0b;animation:blink 1s infinite;}
 .sync-bar.online .sync-dot{background:#10b981;}
 .sync-bar.error .sync-dot{background:#ef4444;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* Upload panel */
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;
+  text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:10px;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--head);}
+.upload-zone input[type=file]{display:none;}
+.upload-icon{font-size:32px;margin-bottom:6px;}
+.upload-hint{color:var(--muted);font-size:12px;margin-top:4px;}
+.order-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+  border-radius:20px;font-size:12px;font-weight:600;}
+.order-badge.custom{background:#d1fae5;color:#065f46;}
+.order-badge.default{background:#e0e7ff;color:#3730a3;}
+.preview-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:10px;font-size:12px;margin-top:8px;max-height:120px;overflow-y:auto;}
+.preview-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);}
+.preview-row:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Production Tracking — DUNS Winter 2026</h1>
 
-  <!-- Firebase sync status bar -->
+  <!-- Sync bar -->
   <div class="sync-bar connecting" id="syncBar">
     <span class="sync-dot"></span>
     <span id="syncMsg">Connecting to Firebase…</span>
   </div>
 
+  <!-- ══════════════════════════════════════════
+       PANEL 1 — Upload Order Data
+  ══════════════════════════════════════════ -->
+  <div class="panel">
+    <h2>📂 Upload Order Data (Next Order)</h2>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span>Current order data:</span>
+      <span class="order-badge default" id="orderBadge">⏳ Loading…</span>
+    </div>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="orderFile" accept=".xlsx,.xls,.csv">
+      <div class="upload-icon">📊</div>
+      <div><strong>Click to choose Excel file</strong> or drag &amp; drop here</div>
+      <div class="upload-hint">Format: PRINT COLOUR | STYLE | (sizes…) | TOTAL  — same as your orders_pivot file</div>
+    </div>
+
+    <div id="sheetSelectWrap" style="display:none;margin-bottom:8px;">
+      <label>Select Sheet</label>
+      <select id="sheetSel"></select>
+    </div>
+
+    <div id="previewWrap" style="display:none;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" id="previewTitle"></div>
+      <div class="preview-box" id="previewBox"></div>
+      <div class="btnrow">
+        <button id="confirmUploadBtn">✅ Save as New Order Data</button>
+        <button class="danger" id="resetOrderBtn">🗑 Reset to Default (DUNS Winter 2026)</button>
+        <button class="secondary" id="cancelUploadBtn">Cancel</button>
+      </div>
+    </div>
+
+    <div class="status" id="uploadStatus"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PANEL 2 — Add / Update Entry
+  ══════════════════════════════════════════ -->
   <div class="panel">
     <h2>Add / Update Entry</h2>
     <div class="row3">
@@ -108,6 +169,9 @@ select[multiple]{height:150px;}
     <div class="status" id="saveStatus"></div>
   </div>
 
+  <!-- ══════════════════════════════════════════
+       PANEL 3 — View Logged Entries
+  ══════════════════════════════════════════ -->
   <div class="panel">
     <h2>View Logged Entries</h2>
     <label>Select Print/Style (leave empty = all with entries)</label>
@@ -127,9 +191,12 @@ select[multiple]{height:150px;}
     <div class="count" id="viewCount"></div>
   </div>
 
+  <!-- ══════════════════════════════════════════
+       PANEL 4 — Download
+  ══════════════════════════════════════════ -->
   <div class="panel">
     <h2>Download</h2>
-    <div class="muted">If combos are selected above, only those are exported. Otherwise everything (all 302 print/style combos, and the full daily log) is exported.</div>
+    <div class="muted">If combos are selected above, only those are exported. Otherwise everything is exported.</div>
     <div class="btnrow">
       <button id="exportBtn">Download (.xlsx — 2 sheets)</button>
     </div>
@@ -137,23 +204,18 @@ select[multiple]{height:150px;}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="window.__xlsxLoadFailed=true;"></script>
+<!-- SheetJS for Excel read + write -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        onerror="window.__xlsxLoadFailed=true;"></script>
 
 <script type="module">
-// ─────────────────────────────────────────────
-//  Firebase Setup
-// ─────────────────────────────────────────────
-import { initializeApp }           from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getAnalytics }            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+// ─────────────────────────────────────────────────────────────
+//  Firebase
+// ─────────────────────────────────────────────────────────────
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  deleteField,
-  collection,
-  getDocs,
-  onSnapshot
+  getFirestore, doc, getDoc, setDoc, collection, getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -166,28 +228,27 @@ const firebaseConfig = {
   measurementId:     "G-58ZDTFKWRX"
 };
 
-const app       = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db        = getFirestore(app);
+const fbApp     = initializeApp(firebaseConfig);
+const analytics = getAnalytics(fbApp);
+const db        = getFirestore(fbApp);
 
-// ─────────────────────────────────────────────
-//  Sync bar helpers
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  Sync bar
+// ─────────────────────────────────────────────────────────────
 const syncBar = document.getElementById("syncBar");
 const syncMsg = document.getElementById("syncMsg");
-
-function setSyncState(state, msg) {
+function setSyncState(state, msg){
   syncBar.className = "sync-bar " + state;
   syncMsg.textContent = msg;
 }
 
-// ─────────────────────────────────────────────
-//  Static data
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  Default (hardcoded) order data  RAW string
+// ─────────────────────────────────────────────────────────────
 const SIZE_ORDER = ["39","42","45","47","49","50","56","62","68","74","80","86","92","98","104","110","116","122","128","134","140","146","152","158","164","L","M","S","XL","XXL"];
 const PROCESSES  = ["Cutting","Sewing","Final Checking","Rejection/Rework"];
 
-const RAW = `Acorn Friends - Brown|Baggy Pants|360|80:96,92:110,104:88,116:38,128:14,140:4,152:4,164:6
+const DEFAULT_RAW = `Acorn Friends - Brown|Baggy Pants|360|80:96,92:110,104:88,116:38,128:14,140:4,152:4,164:6
 Acorn Friends - Brown|Bonnet|112|45:24,47:64,49:24
 Acorn Friends - Brown|Dungaree|176|68:28,74:38,80:40,86:42,92:14,98:8,104:2,110:2,122:2
 Acorn Friends - Brown|Hood Suit|66|80:24,92:24,104:8,116:2,128:2,140:2,152:2,164:2
@@ -490,378 +551,508 @@ Velour Umbrella – Green|Velour Dungaree|68|80:20,86:20,92:20,98:4,104:4
 Velour Umbrella – Green|Velour Pants|126|80:10,86:16,92:18,98:16,104:18,110:12,116:12,122:2,128:6,134:2,140:6,146:2,152:2,158:4
 Velour Umbrella – Green|Velour Top|110|80:20,92:28,104:24,116:18,128:6,140:6,152:4,164:4`;
 
-// ─────────────────────────────────────────────
-//  Parse static data
-// ─────────────────────────────────────────────
-const records = RAW.trim().split("\n").map(line => {
-  const [colour, style, total, sizesStr] = line.split("|");
-  const sizes = {};
-  if (sizesStr) {
-    sizesStr.split(",").forEach(p => {
-      const [sz, q] = p.split(":");
-      sizes[sz] = Number(q);
-    });
-  }
-  return { colour, style, total: Number(total), sizes };
-});
-
-function key(c, s) { return c + "||" + s; }
-// Firestore doc IDs cannot contain '/' so we encode '||' → '__PIPE__'
-function docId(k) { return k.replace(/\|/g, "__PIPE__"); }
-
-const recByKey = {};
-records.forEach(r => recByKey[key(r.colour, r.style)] = r);
-
-// ─────────────────────────────────────────────
-//  In-memory log  (mirrored from Firestore)
-// ─────────────────────────────────────────────
-let log = {};   // log[key][date][process][size] = qty
-
-// ─────────────────────────────────────────────
-//  Firestore helpers
-// ─────────────────────────────────────────────
-const COLLECTION = "prodLog";
-
-async function saveToFirestore(k) {
-  try {
-    const ref = doc(db, COLLECTION, docId(k));
-    if (!log[k] || Object.keys(log[k]).length === 0) {
-      // Delete doc if no entries remain
-      await setDoc(ref, { _empty: true });
-    } else {
-      await setDoc(ref, { data: JSON.stringify(log[k]) });
-    }
-    setSyncState("online", "✓ Saved to Firebase");
-  } catch (e) {
-    setSyncState("error", "⚠ Save failed: " + e.message);
-    console.error(e);
-  }
+function parseDefaultRaw(raw){
+  return raw.trim().split("\n").map(line=>{
+    const [colour,style,total,sizesStr]=line.split("|");
+    const sizes={};
+    if(sizesStr) sizesStr.split(",").forEach(p=>{ const [sz,q]=p.split(":"); sizes[sz]=Number(q); });
+    return {colour,style,total:Number(total),sizes};
+  });
 }
 
-async function loadAllFromFirestore() {
-  try {
-    setSyncState("connecting", "Loading data from Firebase…");
-    const snap = await getDocs(collection(db, COLLECTION));
-    log = {};
-    snap.forEach(d => {
-      if (d.data()._empty) return;
-      // Reverse docId encoding
-      const k = d.id.replace(/__PIPE__/g, "||");
-      try {
-        log[k] = JSON.parse(d.data().data);
-      } catch (e) { /* skip corrupt */ }
+// ─────────────────────────────────────────────────────────────
+//  Live records (loaded from Firebase orderConfig or default)
+// ─────────────────────────────────────────────────────────────
+let records = [];
+let recByKey = {};
+let usingCustomOrder = false;
+
+function buildLookup(){
+  recByKey={};
+  records.forEach(r=>recByKey[key(r.colour,r.style)]=r);
+}
+
+function key(c,s){ return c+"||"+s; }
+function docId(k){ return k.replace(/\|/g,"__PIPE__"); }
+
+// ─────────────────────────────────────────────────────────────
+//  In-memory production log
+// ─────────────────────────────────────────────────────────────
+let log = {};
+
+// ─────────────────────────────────────────────────────────────
+//  Firestore helpers
+// ─────────────────────────────────────────────────────────────
+async function saveLogToFirestore(k){
+  try{
+    const ref=doc(db,"prodLog",docId(k));
+    await setDoc(ref,{ data: (!log[k]||!Object.keys(log[k]).length) ? "" : JSON.stringify(log[k]) });
+    setSyncState("online","✓ Saved to Firebase");
+  }catch(e){ setSyncState("error","⚠ Save failed: "+e.message); }
+}
+
+async function saveOrderToFirestore(recs, label){
+  try{
+    await setDoc(doc(db,"orderConfig","current"),{
+      label, records: JSON.stringify(recs), updatedAt: new Date().toISOString()
     });
-    setSyncState("online", "✓ Connected to Firebase  —  " + Object.keys(log).length + " combo(s) loaded");
+  }catch(e){ throw e; }
+}
+
+async function loadAll(){
+  setSyncState("connecting","Loading data from Firebase…");
+  try{
+    // 1. Try to load custom order config
+    const orderSnap = await getDoc(doc(db,"orderConfig","current"));
+    if(orderSnap.exists() && orderSnap.data().records){
+      records = JSON.parse(orderSnap.data().records);
+      usingCustomOrder = true;
+      updateOrderBadge(orderSnap.data().label || "Custom Upload");
+    } else {
+      records = parseDefaultRaw(DEFAULT_RAW);
+      usingCustomOrder = false;
+      updateOrderBadge(null);
+    }
+    buildLookup();
+    rebuildColourDropdown();
+
+    // 2. Load production log
+    const logSnap = await getDocs(collection(db,"prodLog"));
+    log={};
+    logSnap.forEach(d=>{
+      if(!d.data().data) return;
+      const k=d.id.replace(/__PIPE__/g,"||");
+      try{ log[k]=JSON.parse(d.data().data); }catch(e){}
+    });
+    setSyncState("online","✓ Connected to Firebase — "+Object.keys(log).length+" combo(s) logged");
     populateViewOptions();
     renderViewTable();
     renderEntry();
-  } catch (e) {
-    setSyncState("error", "⚠ Could not load from Firebase: " + e.message);
-    console.error(e);
+  }catch(e){
+    setSyncState("error","⚠ Could not load from Firebase: "+e.message);
+    records=parseDefaultRaw(DEFAULT_RAW);
+    buildLookup();
+    rebuildColourDropdown();
+    updateOrderBadge(null);
   }
 }
 
-// ─────────────────────────────────────────────
-//  DOM wiring
-// ─────────────────────────────────────────────
-const colourSel         = document.getElementById("colourSel");
-const styleSel          = document.getElementById("styleSel");
-const dateSel           = document.getElementById("dateSel");
-const entryTable        = document.getElementById("entryTable");
-const saveStatus        = document.getElementById("saveStatus");
-const viewDropdownBtn   = document.getElementById("viewDropdownBtn");
-const viewDropdownPanel = document.getElementById("viewDropdownPanel");
-const ddOptions         = document.getElementById("ddOptions");
-const viewTable         = document.getElementById("viewTable");
-let   viewSelected      = new Set();
-const viewCount         = document.getElementById("viewCount");
-const statusMsg         = document.getElementById("statusMsg");
+// ─────────────────────────────────────────────────────────────
+//  Order badge
+// ─────────────────────────────────────────────────────────────
+const orderBadge=document.getElementById("orderBadge");
+function updateOrderBadge(label){
+  if(label){
+    orderBadge.className="order-badge custom";
+    orderBadge.textContent="✅ Custom: "+label+" ("+records.length+" combos)";
+  }else{
+    orderBadge.className="order-badge default";
+    orderBadge.textContent="📦 Default: DUNS Winter 2026 ("+records.length+" combos)";
+  }
+}
 
-const colours = [...new Set(records.map(r => r.colour))].sort();
-colours.forEach(c => {
-  const o = document.createElement("option");
-  o.value = c; o.textContent = c;
-  colourSel.appendChild(o);
+// ─────────────────────────────────────────────────────────────
+//  Excel Upload — Parser
+// ─────────────────────────────────────────────────────────────
+let parsedWorkbook = null;
+let parsedRecords  = [];
+
+function parseSheet(wb, sheetName){
+  const ws   = wb.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+
+  // Find header row (look for PRINT COLOUR / STYLE)
+  let headerRow=-1, colourCol=-1, styleCol=-1, totalCol=-1;
+  for(let i=0;i<Math.min(8,data.length);i++){
+    const row=data[i];
+    for(let j=0;j<row.length;j++){
+      const cell=String(row[j]).trim().toUpperCase().replace(/\s+/g," ");
+      if(cell==="PRINT COLOUR"||cell==="PRINT COLOR"||cell==="COLOUR"||cell==="COLOR"){ colourCol=j; headerRow=i; }
+      if(cell==="STYLE"||cell==="STYLE NAME") styleCol=j;
+      if(cell==="TOTAL"||cell==="GRAND TOTAL"||cell==="TOT") totalCol=j;
+    }
+    if(headerRow!==-1) break;
+  }
+  if(headerRow===-1) throw new Error("Could not find 'PRINT COLOUR' and 'STYLE' headers in this sheet.");
+
+  const headers=data[headerRow];
+  // Collect size columns (skip colour, style, total; keep numeric/letter sizes)
+  const sizeCols=[];
+  for(let j=0;j<headers.length;j++){
+    if(j===colourCol||j===styleCol||j===totalCol) continue;
+    const h=String(headers[j]).trim();
+    if(!h||h==="0") continue;
+    // Accept numeric sizes and letter sizes S/M/L/XL/XXL
+    if(/^\d+$/.test(h)||/^(S|M|L|XL|XXL|XS|2XL|3XL|XXS)$/i.test(h)) sizeCols.push({col:j,size:h.toUpperCase()});
+  }
+
+  const recs=[];
+  for(let i=headerRow+1;i<data.length;i++){
+    const row=data[i];
+    const colour=String(row[colourCol]||"").trim();
+    const style =String(row[styleCol ]||"").trim();
+    if(!colour||!style||colour.toUpperCase()==="PRINT COLOUR") continue;
+
+    let total=totalCol>=0?Number(row[totalCol])||0:0;
+    const sizes={};
+    let computed=0;
+    sizeCols.forEach(({col,size})=>{
+      const qty=Number(row[col])||0;
+      if(qty>0){ sizes[size]=qty; computed+=qty; }
+    });
+    if(!total) total=computed;
+    if(!total&&!Object.keys(sizes).length) continue;
+    recs.push({colour,style,total,sizes});
+  }
+  if(!recs.length) throw new Error("No valid data rows found. Check PRINT COLOUR / STYLE columns.");
+  return recs;
+}
+
+// Upload zone events
+const uploadZone   =document.getElementById("uploadZone");
+const orderFileInp =document.getElementById("orderFile");
+const sheetSelWrap =document.getElementById("sheetSelectWrap");
+const sheetSel     =document.getElementById("sheetSel");
+const previewWrap  =document.getElementById("previewWrap");
+const previewTitle =document.getElementById("previewTitle");
+const previewBox   =document.getElementById("previewBox");
+const uploadStatus =document.getElementById("uploadStatus");
+
+uploadZone.addEventListener("click",()=>orderFileInp.click());
+uploadZone.addEventListener("dragover",e=>{e.preventDefault();uploadZone.classList.add("drag");});
+uploadZone.addEventListener("dragleave",()=>uploadZone.classList.remove("drag"));
+uploadZone.addEventListener("drop",e=>{
+  e.preventDefault(); uploadZone.classList.remove("drag");
+  if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+orderFileInp.addEventListener("change",e=>{
+  if(e.target.files[0]) processFile(e.target.files[0]);
 });
 
-function populateStyles() {
-  const c = colourSel.value;
-  const styles = records.filter(r => r.colour === c).map(r => r.style);
-  styleSel.innerHTML = "";
-  styles.forEach(s => {
-    const o = document.createElement("option");
-    o.value = s; o.textContent = s;
-    styleSel.appendChild(o);
+function processFile(file){
+  uploadStatus.textContent="Reading file…";
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      parsedWorkbook=XLSX.read(e.target.result,{type:"array"});
+      // Populate sheet selector
+      sheetSel.innerHTML="";
+      parsedWorkbook.SheetNames.forEach(n=>{
+        const o=document.createElement("option");
+        o.value=n; o.textContent=n; sheetSel.appendChild(o);
+      });
+      // Auto-pick sheet with "order" in name, else first
+      const preferred=parsedWorkbook.SheetNames.find(n=>/order/i.test(n));
+      if(preferred) sheetSel.value=preferred;
+
+      sheetSelWrap.style.display="block";
+      previewWrap.style.display="block";
+      previewSheet();
+      uploadStatus.textContent="";
+    }catch(err){
+      uploadStatus.textContent="⚠ Error reading file: "+err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function previewSheet(){
+  try{
+    parsedRecords=parseSheet(parsedWorkbook,sheetSel.value);
+    previewTitle.textContent=`Found ${parsedRecords.length} Print/Style combos in sheet "${sheetSel.value}":`;
+    const colours=[...new Set(parsedRecords.map(r=>r.colour))];
+    previewBox.innerHTML=colours.map(c=>{
+      const styles=parsedRecords.filter(r=>r.colour===c);
+      const total=styles.reduce((s,r)=>s+r.total,0);
+      return `<div class="preview-row"><span><strong>${c}</strong></span><span>${styles.length} styles &nbsp;|&nbsp; ${total.toLocaleString()} pcs</span></div>`;
+    }).join("");
+    uploadStatus.textContent="";
+  }catch(err){
+    parsedRecords=[];
+    previewTitle.textContent="⚠ "+err.message;
+    previewBox.innerHTML="";
+  }
+}
+
+sheetSel.addEventListener("change",previewSheet);
+
+document.getElementById("confirmUploadBtn").addEventListener("click",async()=>{
+  if(!parsedRecords.length){ uploadStatus.textContent="No records to save."; return; }
+  uploadStatus.textContent="Saving to Firebase…";
+  document.getElementById("confirmUploadBtn").disabled=true;
+  try{
+    const label=sheetSel.value+" ("+parsedRecords.length+" combos)";
+    await saveOrderToFirestore(parsedRecords,label);
+    records=parsedRecords;
+    usingCustomOrder=true;
+    buildLookup();
+    rebuildColourDropdown();
+    updateOrderBadge(label);
+    sheetSelWrap.style.display="none";
+    previewWrap.style.display="none";
+    orderFileInp.value="";
+    parsedWorkbook=null; parsedRecords=[];
+    uploadStatus.textContent="✅ New order data saved! "+records.length+" combos loaded.";
+    setSyncState("online","✓ Order data updated in Firebase");
+  }catch(err){
+    uploadStatus.textContent="⚠ Failed to save: "+err.message;
+  }
+  document.getElementById("confirmUploadBtn").disabled=false;
+});
+
+document.getElementById("resetOrderBtn").addEventListener("click",async()=>{
+  if(!confirm("Reset to DUNS Winter 2026 default data? Custom order will be removed from Firebase.")) return;
+  try{
+    await setDoc(doc(db,"orderConfig","current"),{label:"",records:"",updatedAt:new Date().toISOString()});
+    records=parseDefaultRaw(DEFAULT_RAW);
+    usingCustomOrder=false;
+    buildLookup();
+    rebuildColourDropdown();
+    updateOrderBadge(null);
+    sheetSelWrap.style.display="none";
+    previewWrap.style.display="none";
+    orderFileInp.value="";
+    parsedWorkbook=null; parsedRecords=[];
+    uploadStatus.textContent="✅ Reset to default order data.";
+  }catch(err){
+    uploadStatus.textContent="⚠ "+err.message;
+  }
+});
+
+document.getElementById("cancelUploadBtn").addEventListener("click",()=>{
+  sheetSelWrap.style.display="none";
+  previewWrap.style.display="none";
+  orderFileInp.value="";
+  parsedWorkbook=null; parsedRecords=[];
+  uploadStatus.textContent="";
+});
+
+// ─────────────────────────────────────────────────────────────
+//  Colour/Style dropdowns
+// ─────────────────────────────────────────────────────────────
+const colourSel=document.getElementById("colourSel");
+const styleSel =document.getElementById("styleSel");
+const dateSel  =document.getElementById("dateSel");
+const entryTable=document.getElementById("entryTable");
+const saveStatus=document.getElementById("saveStatus");
+
+function rebuildColourDropdown(){
+  const colours=[...new Set(records.map(r=>r.colour))].sort();
+  colourSel.innerHTML="";
+  colours.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; colourSel.appendChild(o); });
+  if(colours.length){ colourSel.value=colours[0]; populateStyles(); }
+}
+
+function populateStyles(){
+  const c=colourSel.value;
+  styleSel.innerHTML="";
+  records.filter(r=>r.colour===c).forEach(r=>{
+    const o=document.createElement("option"); o.value=r.style; o.textContent=r.style; styleSel.appendChild(o);
   });
   renderEntry();
 }
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
-dateSel.value = todayStr();
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+dateSel.value=todayStr();
 
-function currentRecord() { return recByKey[key(colourSel.value, styleSel.value)]; }
+function currentRecord(){ return recByKey[key(colourSel.value,styleSel.value)]; }
 
-function renderEntry() {
-  const rec = currentRecord();
-  if (!rec) { entryTable.innerHTML = ""; return; }
-  const sizes = SIZE_ORDER.filter(sz => rec.sizes[sz] !== undefined);
-  const k = key(rec.colour, rec.style);
-  const d = dateSel.value;
-  const existing = (log[k] && log[k][d]) || {};
+function renderEntry(){
+  const rec=currentRecord();
+  if(!rec){ entryTable.innerHTML=""; return; }
+  const sizes=SIZE_ORDER.filter(sz=>rec.sizes[sz]!==undefined);
+  const k=key(rec.colour,rec.style), d=dateSel.value;
+  const existing=(log[k]&&log[k][d])||{};
 
-  let html = "<thead><tr><th>Row</th>";
-  sizes.forEach(sz => html += `<th>${sz}</th>`);
-  html += "<th>Total</th></tr></thead><tbody>";
-
-  html += `<tr class="orderrow"><td>Order Qty</td>`;
-  sizes.forEach(sz => html += `<td>${rec.sizes[sz]}</td>`);
-  html += `<td>${rec.total}</td></tr>`;
-
-  PROCESSES.forEach(p => {
-    html += `<tr class="procrow"><td>${p}</td>`;
-    sizes.forEach(sz => {
-      const val = (existing[p] && existing[p][sz] !== undefined) ? existing[p][sz] : "";
-      html += `<td><input type="number" min="0" data-proc="${p}" data-size="${sz}" value="${val}"></td>`;
+  let html="<thead><tr><th>Row</th>";
+  sizes.forEach(sz=>html+=`<th>${sz}</th>`);
+  html+="<th>Total</th></tr></thead><tbody>";
+  html+=`<tr class="orderrow"><td>Order Qty</td>`;
+  sizes.forEach(sz=>html+=`<td>${rec.sizes[sz]}</td>`);
+  html+=`<td>${rec.total}</td></tr>`;
+  PROCESSES.forEach(p=>{
+    html+=`<tr class="procrow"><td>${p}</td>`;
+    sizes.forEach(sz=>{
+      const val=(existing[p]&&existing[p][sz]!==undefined)?existing[p][sz]:"";
+      html+=`<td><input type="number" min="0" data-proc="${p}" data-size="${sz}" value="${val}"></td>`;
     });
-    html += `<td></td></tr>`;
+    html+=`<td></td></tr>`;
   });
-  html += "</tbody>";
-  entryTable.innerHTML = html;
-  saveStatus.textContent = "";
+  html+="</tbody>";
+  entryTable.innerHTML=html;
+  saveStatus.textContent="";
 }
 
-colourSel.addEventListener("change", populateStyles);
-styleSel.addEventListener("change", renderEntry);
-dateSel.addEventListener("change", renderEntry);
-colourSel.value = colours[0];
-populateStyles();
+colourSel.addEventListener("change",populateStyles);
+styleSel.addEventListener("change",renderEntry);
+dateSel.addEventListener("change",renderEntry);
 
-// ── Save ──
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const rec = currentRecord();
-  if (!rec) return;
-  const k = key(rec.colour, rec.style);
-  const d = dateSel.value;
-  if (!d) { saveStatus.textContent = "Pick a date first."; return; }
-
-  const entry = {};
-  entryTable.querySelectorAll("input").forEach(inp => {
-    const p = inp.dataset.proc, sz = inp.dataset.size;
-    if (inp.value !== "") {
-      if (!entry[p]) entry[p] = {};
-      entry[p][sz] = Number(inp.value);
-    }
+// ─────────────────────────────────────────────────────────────
+//  Save / Delete
+// ─────────────────────────────────────────────────────────────
+document.getElementById("saveBtn").addEventListener("click",async()=>{
+  const rec=currentRecord(); if(!rec) return;
+  const k=key(rec.colour,rec.style), d=dateSel.value;
+  if(!d){ saveStatus.textContent="Pick a date first."; return; }
+  const entry={};
+  entryTable.querySelectorAll("input").forEach(inp=>{
+    const p=inp.dataset.proc,sz=inp.dataset.size;
+    if(inp.value!==""){if(!entry[p])entry[p]={};entry[p][sz]=Number(inp.value);}
   });
-
-  if (!log[k]) log[k] = {};
-  log[k][d] = entry;
-
-  saveStatus.textContent = "Saving…";
-  document.getElementById("saveBtn").disabled = true;
-
-  await saveToFirestore(k);
-
-  saveStatus.textContent = "Saved for " + d + ".";
-  document.getElementById("saveBtn").disabled = false;
-
-  populateViewOptions();
-  renderViewTable();
+  if(!log[k])log[k]={};
+  log[k][d]=entry;
+  saveStatus.textContent="Saving…";
+  document.getElementById("saveBtn").disabled=true;
+  await saveLogToFirestore(k);
+  saveStatus.textContent="Saved for "+d+".";
+  document.getElementById("saveBtn").disabled=false;
+  populateViewOptions(); renderViewTable();
 });
 
-// ── Delete ──
-document.getElementById("deleteBtn").addEventListener("click", async () => {
-  const rec = currentRecord();
-  if (!rec) return;
-  const k = key(rec.colour, rec.style);
-  const d = dateSel.value;
-  if (log[k] && log[k][d]) {
+document.getElementById("deleteBtn").addEventListener("click",async()=>{
+  const rec=currentRecord(); if(!rec) return;
+  const k=key(rec.colour,rec.style), d=dateSel.value;
+  if(log[k]&&log[k][d]){
     delete log[k][d];
-    if (Object.keys(log[k]).length === 0) delete log[k];
-
-    saveStatus.textContent = "Deleting…";
-    await saveToFirestore(k);
-
-    saveStatus.textContent = "Deleted entry for " + d + ".";
-    renderEntry();
-    populateViewOptions();
-    renderViewTable();
-  } else {
-    saveStatus.textContent = "No entry for this date.";
-  }
+    if(!Object.keys(log[k]).length) delete log[k];
+    saveStatus.textContent="Deleting…";
+    await saveLogToFirestore(k);
+    saveStatus.textContent="Deleted entry for "+d+".";
+    renderEntry(); populateViewOptions(); renderViewTable();
+  }else{ saveStatus.textContent="No entry for this date."; }
 });
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 //  View panel
-// ─────────────────────────────────────────────
-function loggedCombos() {
-  return Object.keys(log).filter(k => Object.keys(log[k]).length > 0);
-}
+// ─────────────────────────────────────────────────────────────
+const viewDropdownBtn  =document.getElementById("viewDropdownBtn");
+const viewDropdownPanel=document.getElementById("viewDropdownPanel");
+const ddOptions        =document.getElementById("ddOptions");
+const viewTable        =document.getElementById("viewTable");
+const viewCount        =document.getElementById("viewCount");
+let   viewSelected     =new Set();
 
-function populateViewOptions() {
-  const valid = new Set(loggedCombos());
-  [...viewSelected].forEach(k => { if (!valid.has(k)) viewSelected.delete(k); });
-  ddOptions.innerHTML = "";
-  loggedCombos().sort().forEach(k => {
-    const rec = recByKey[k];
-    const dateList = Object.keys(log[k]).sort().join(", ");
-    const row = document.createElement("label");
-    row.className = "ddopt";
-    row.innerHTML = `<input type="checkbox" value="${k}" ${viewSelected.has(k) ? "checked" : ""}> ${rec.colour} — ${rec.style} (${dateList})`;
-    row.querySelector("input").addEventListener("change", (e) => {
-      if (e.target.checked) viewSelected.add(k); else viewSelected.delete(k);
-      updateDropdownLabel();
-      renderViewTable();
+function loggedCombos(){ return Object.keys(log).filter(k=>Object.keys(log[k]).length>0); }
+
+function populateViewOptions(){
+  const valid=new Set(loggedCombos());
+  [...viewSelected].forEach(k=>{ if(!valid.has(k)) viewSelected.delete(k); });
+  ddOptions.innerHTML="";
+  loggedCombos().sort().forEach(k=>{
+    const rec=recByKey[k]; if(!rec) return;
+    const dateList=Object.keys(log[k]).sort().join(", ");
+    const row=document.createElement("label");
+    row.className="ddopt";
+    row.innerHTML=`<input type="checkbox" value="${k}" ${viewSelected.has(k)?"checked":""}> ${rec.colour} — ${rec.style} (${dateList})`;
+    row.querySelector("input").addEventListener("change",e=>{
+      if(e.target.checked) viewSelected.add(k); else viewSelected.delete(k);
+      updateDropdownLabel(); renderViewTable();
     });
     ddOptions.appendChild(row);
   });
   updateDropdownLabel();
 }
 
-function updateDropdownLabel() {
-  const n = viewSelected.size;
-  viewDropdownBtn.firstChild.textContent = n === 0 ? "All entries " : (n + " selected ");
+function updateDropdownLabel(){
+  const n=viewSelected.size;
+  viewDropdownBtn.firstChild.textContent=n===0?"All entries ":(n+" selected ");
 }
 
-viewDropdownBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  viewDropdownPanel.hidden = !viewDropdownPanel.hidden;
+viewDropdownBtn.addEventListener("click",e=>{
+  e.stopPropagation(); viewDropdownPanel.hidden=!viewDropdownPanel.hidden;
 });
-document.addEventListener("click", (e) => {
-  if (!viewDropdownPanel.hidden && !document.getElementById("viewDropdown").contains(e.target)) {
-    viewDropdownPanel.hidden = true;
-  }
+document.addEventListener("click",e=>{
+  if(!viewDropdownPanel.hidden&&!document.getElementById("viewDropdown").contains(e.target))
+    viewDropdownPanel.hidden=true;
 });
 
-function processQty(k, d, p) {
-  const sizesObj = log[k] && log[k][d] && log[k][d][p];
-  if (!sizesObj || !Object.keys(sizesObj).length) return "";
-  return Object.values(sizesObj).reduce((a, b) => a + b, 0);
+function processQty(k,d,p){
+  const obj=log[k]&&log[k][d]&&log[k][d][p];
+  if(!obj||!Object.keys(obj).length) return "";
+  return Object.values(obj).reduce((a,b)=>a+b,0);
 }
 
-function renderViewTable() {
-  const keys = [...viewSelected];
-  const useKeys = keys.length ? keys : loggedCombos();
-  const rows = [];
-  useKeys.sort().forEach(k => {
-    const rec = recByKey[k];
-    const dates = Object.keys(log[k] || {}).sort();
-    dates.forEach(d => {
-      rows.push([rec.colour, rec.style, d, ...PROCESSES.map(p => processQty(k, d, p))]);
+function renderViewTable(){
+  const keys=[...viewSelected];
+  const useKeys=keys.length?keys:loggedCombos();
+  const rows=[];
+  useKeys.sort().forEach(k=>{
+    const rec=recByKey[k];
+    Object.keys(log[k]||{}).sort().forEach(d=>{
+      rows.push([(rec?rec.colour:k),(rec?rec.style:"?"),d,...PROCESSES.map(p=>processQty(k,d,p))]);
     });
   });
-  if (!rows.length) {
-    viewTable.innerHTML = "";
-    viewCount.textContent = "No logged entries yet.";
-    return;
-  }
-  let html = "<thead><tr><th>Print Colour</th><th>Style</th><th>Date</th><th>Cutting</th><th>Sewing</th><th>Final Checking</th><th>Rejection/Rework</th></tr></thead><tbody>";
-  rows.forEach(r => {
-    html += "<tr>" + r.map(v => `<td>${v}</td>`).join("") + "</tr>";
-  });
-  html += "</tbody>";
-  viewTable.innerHTML = html;
-  viewCount.textContent = rows.length + " logged rows shown.";
+  if(!rows.length){ viewTable.innerHTML=""; viewCount.textContent="No logged entries yet."; return; }
+  let html="<thead><tr><th>Print Colour</th><th>Style</th><th>Date</th><th>Cutting</th><th>Sewing</th><th>Final Checking</th><th>Rejection/Rework</th></tr></thead><tbody>";
+  rows.forEach(r=>{ html+="<tr>"+r.map(v=>`<td>${v}</td>`).join("")+"</tr>"; });
+  html+="</tbody>";
+  viewTable.innerHTML=html;
+  viewCount.textContent=rows.length+" logged rows shown.";
 }
 
-document.getElementById("selectAllBtn").addEventListener("click", (e) => {
-  e.stopPropagation();
-  loggedCombos().forEach(k => viewSelected.add(k));
-  populateViewOptions();
-  renderViewTable();
-});
-document.getElementById("clearSelBtn").addEventListener("click", (e) => {
-  e.stopPropagation();
-  viewSelected.clear();
-  populateViewOptions();
-  renderViewTable();
-});
+document.getElementById("selectAllBtn").addEventListener("click",e=>{ e.stopPropagation(); loggedCombos().forEach(k=>viewSelected.add(k)); populateViewOptions(); renderViewTable(); });
+document.getElementById("clearSelBtn").addEventListener("click",e=>{ e.stopPropagation(); viewSelected.clear(); populateViewOptions(); renderViewTable(); });
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 //  Export
-// ─────────────────────────────────────────────
-function buildTrackingRows(combosKeys) {
-  const headers = ["PRINT COLOUR", "STYLE", "PROCESS", ...SIZE_ORDER, "TOTAL"];
-  const rows = [headers];
-  combosKeys.forEach(k => {
-    const rec = recByKey[k];
-    if (!rec) return;
-    rows.push([rec.colour, rec.style, "", ...SIZE_ORDER.map(sz => rec.sizes[sz] !== undefined ? rec.sizes[sz] : ""), rec.total]);
-    PROCESSES.forEach(p => {
-      const cellVals = SIZE_ORDER.map(sz => {
-        let sum = null;
-        const dates = log[k] || {};
-        Object.keys(dates).forEach(d => {
-          const v = dates[d][p] && dates[d][p][sz];
-          if (v !== undefined) { sum = (sum || 0) + v; }
-        });
-        return sum === null ? "" : sum;
+// ─────────────────────────────────────────────────────────────
+function buildTrackingRows(combosKeys){
+  const sizeSet=new Set();
+  combosKeys.forEach(k=>{ const rec=recByKey[k]; if(rec) Object.keys(rec.sizes).forEach(s=>sizeSet.add(s)); });
+  const usedSizes=SIZE_ORDER.filter(s=>sizeSet.has(s));
+  const rows=[["PRINT COLOUR","STYLE","PROCESS",...usedSizes,"TOTAL"]];
+  combosKeys.forEach(k=>{
+    const rec=recByKey[k]; if(!rec) return;
+    rows.push([rec.colour,rec.style,"",...usedSizes.map(sz=>rec.sizes[sz]??rec.sizes[sz]||""),rec.total]);
+    PROCESSES.forEach(p=>{
+      const vals=usedSizes.map(sz=>{
+        let sum=null;
+        Object.keys(log[k]||{}).forEach(d=>{ const v=log[k][d][p]&&log[k][d][p][sz]; if(v!==undefined)sum=(sum||0)+v; });
+        return sum===null?"":sum;
       });
-      rows.push(["", "", p, ...cellVals, ""]);
+      rows.push(["","",p,...vals,""]);
     });
   });
   return rows;
 }
 
-function buildLogRows(combosKeys) {
-  const rows = [["Print Colour", "Style", "Date", "Cutting", "Sewing", "Final Checking", "Rejection/Rework"]];
-  const seen = [];
-  combosKeys.sort().forEach(k => {
-    const rec = recByKey[k];
-    if (!rec) return;
-    const dates = Object.keys(log[k] || {}).sort();
-    dates.forEach(d => seen.push([k, rec, d]));
-  });
-  seen.forEach(([k, rec, d]) => {
-    rows.push([rec.colour, rec.style, d, ...PROCESSES.map(p => processQty(k, d, p))]);
+function buildLogRows(combosKeys){
+  const rows=[["Print Colour","Style","Date","Cutting","Sewing","Final Checking","Rejection/Rework"]];
+  combosKeys.sort().forEach(k=>{
+    const rec=recByKey[k];
+    Object.keys(log[k]||{}).sort().forEach(d=>{
+      rows.push([(rec?rec.colour:k),(rec?rec.style:"?"),d,...PROCESSES.map(p=>processQty(k,d,p))]);
+    });
   });
   return rows;
 }
 
-document.getElementById("exportBtn").addEventListener("click", () => {
-  statusMsg.textContent = "Building workbook…";
-  try {
-    if (window.__xlsxLoadFailed || typeof XLSX === "undefined") {
-      statusMsg.textContent = "Couldn't load the Excel library (network blocked?). Try reloading the page.";
-      return;
-    }
-    const selected = [...viewSelected];
-    const trackingKeys = selected.length ? selected : records.map(r => key(r.colour, r.style));
-    const logKeys      = selected.length ? selected : loggedCombos();
-
-    const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.aoa_to_sheet(buildTrackingRows(trackingKeys));
-    ws1["!cols"] = [{ wch: 26 }, { wch: 24 }, { wch: 16 }, ...SIZE_ORDER.map(() => ({ wch: 6 })), { wch: 9 }];
-    XLSX.utils.book_append_sheet(wb, ws1, "Production Tracking");
-
-    const ws2 = XLSX.utils.aoa_to_sheet(buildLogRows(logKeys));
-    ws2["!cols"] = [{ wch: 26 }, { wch: 24 }, { wch: 12 }, { wch: 9 }, { wch: 9 }, { wch: 14 }, { wch: 16 }];
-    XLSX.utils.book_append_sheet(wb, ws2, "Daily Log");
-
-    const arrBuf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob   = new Blob([arrBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-
-    // Standard browser download (no Claude API needed)
-    const url  = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href     = url;
-    link.download = "Production_Tracking.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    statusMsg.textContent = "File downloaded!";
-  } catch (err) {
-    statusMsg.textContent = "Error: " + (err && err.message || "unknown");
-    console.error(err);
-  }
+document.getElementById("exportBtn").addEventListener("click",()=>{
+  const statusMsg=document.getElementById("statusMsg");
+  statusMsg.textContent="Building workbook…";
+  try{
+    if(window.__xlsxLoadFailed||typeof XLSX==="undefined"){ statusMsg.textContent="XLSX library not loaded."; return; }
+    const selected=[...viewSelected];
+    const trackingKeys=selected.length?selected:records.map(r=>key(r.colour,r.style));
+    const logKeys=selected.length?selected:loggedCombos();
+    const wb=XLSX.utils.book_new();
+    const ws1=XLSX.utils.aoa_to_sheet(buildTrackingRows(trackingKeys));
+    XLSX.utils.book_append_sheet(wb,ws1,"Production Tracking");
+    const ws2=XLSX.utils.aoa_to_sheet(buildLogRows(logKeys));
+    XLSX.utils.book_append_sheet(wb,ws2,"Daily Log");
+    const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download="Production_Tracking.xlsx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    statusMsg.textContent="✅ File downloaded!";
+  }catch(err){ document.getElementById("statusMsg").textContent="Error: "+err.message; }
 });
 
-// ─────────────────────────────────────────────
-//  Bootstrap — load data from Firestore
-// ─────────────────────────────────────────────
-await loadAllFromFirestore();
-
+// ─────────────────────────────────────────────────────────────
+//  Boot
+// ─────────────────────────────────────────────────────────────
+await loadAll();
 </script>
 </body>
 </html>
