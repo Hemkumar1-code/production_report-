@@ -1042,7 +1042,7 @@ function buildTrackingRows(combosKeys){
   const rows=[["PRINT COLOUR","STYLE","PROCESS",...usedSizes,"TOTAL"]];
   combosKeys.forEach(k=>{
     const rec=recByKey[k]; if(!rec) return;
-    rows.push([rec.colour,rec.style,"",...usedSizes.map(sz=>rec.sizes[sz]??rec.sizes[sz]||""),rec.total]);
+    rows.push([rec.colour,rec.style,"",...usedSizes.map(sz=>rec.sizes[sz]!==undefined?rec.sizes[sz]:""),rec.total]);
     PROCESSES.forEach(p=>{
       const vals=usedSizes.map(sz=>{
         let sum=null;
