@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Production Tracker</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --text:#1a1d23; --muted:#6b7280; --border:#e2e5ea;
+  --accent:#2563eb; --accent-fg:#ffffff; --head:#eef2ff; --proc:#f8fafc;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --panel:#1c1f26; --text:#e8eaed; --muted:#9aa1ac; --border:#2c303a;
+    --accent:#3b82f6; --accent-fg:#0b1020; --head:#20263a; --proc:#20232b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --panel:#1c1f26; --text:#e8eaed; --muted:#9aa1ac; --border:#2c303a;
+  --accent:#3b82f6; --accent-fg:#0b1020; --head:#20263a; --proc:#20232b;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px;}
+.wrap{max-width:1000px;margin:0 auto;padding:16px;}
+h1{font-size:18px;margin:4px 0 12px;}
+h2{font-size:15px;margin:0 0 10px;}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+select,input[type=number],input[type=date]{
+  width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:14px;
+}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin-top:10px;}
+table{border-collapse:collapse;width:100%;min-width:520px;}
+th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:6px 8px;text-align:center;white-space:nowrap;font-size:13px;}
+th:first-child,td:first-child{position:sticky;left:0;background:var(--panel);text-align:left;min-width:130px;}
+thead th{background:var(--head);font-weight:600;}
+tr.orderrow td{font-weight:600;background:var(--head);}
+tr.orderrow td:first-child{background:var(--head);}
+tr.procrow td:first-child{background:var(--proc);color:var(--muted);font-style:italic;}
+tr.procrow td{background:var(--proc);}
+input[type=number]{padding:4px;width:64px;text-align:center;}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+button{background:var(--accent);color:var(--accent-fg);border:none;border-radius:6px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+button.secondary{background:transparent;color:var(--accent);border:1px solid var(--accent);}
+button:disabled{opacity:0.5;cursor:not-allowed;}
+.muted{color:var(--muted);font-size:12px;margin-top:6px;}
+.status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;}
+.count{font-size:12px;color:var(--muted);margin-top:6px;}
+select[multiple]{height:150px;}
+.dropdown{position:relative;}
+.ddbtn{width:100%;text-align:left;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:14px;font-weight:400;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.ddpanel{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:20;max-height:280px;overflow-y:auto;padding:8px;}
+.ddactions{display:flex;gap:8px;margin-bottom:8px;}
+.ddactions button{padding:6px 10px;font-size:12px;}
+.ddopt{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;font-size:13px;}
+.ddopt:hover{background:var(--bg);}
+.ddopt input{width:auto;}
+
+/* Firebase sync indicator */
+.sync-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;font-size:12px;margin-bottom:12px;}
+.sync-bar.connecting{background:#fef3c7;color:#92400e;}
+.sync-bar.online{background:#d1fae5;color:#065f46;}
+.sync-bar.error{background:#fee2e2;color:#991b1b;}
+.sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sync-bar.connecting .sync-dot{background:#f59e0b;animation:blink 1s infinite;}
+.sync-bar.online .sync-dot{background:#10b981;}
+.sync-bar.error .sync-dot{background:#ef4444;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Production Tracking — DUNS Winter 2026</h1>
+
+  <!-- Firebase sync status bar -->
+  <div class="sync-bar connecting" id="syncBar">
+    <span class="sync-dot"></span>
+    <span id="syncMsg">Connecting to Firebase…</span>
+  </div>
+
+  <div class="panel">
+    <h2>Add / Update Entry</h2>
+    <div class="row3">
+      <div>
+        <label>Print / Colour</label>
+        <select id="colourSel"></select>
+      </div>
+      <div>
+        <label>Style</label>
+        <select id="styleSel"></select>
+      </div>
+      <div>
+        <label>Date</label>
+        <input type="date" id="dateSel">
+      </div>
+    </div>
+    <div class="tblwrap">
+      <table id="entryTable"></table>
+    </div>
+    <div class="muted">Order Qty row is reference. Enter counts per size for the date above — reopen the same Print/Style/Date later to edit it.</div>
+    <div class="btnrow">
+      <button id="saveBtn">Save Entry</button>
+      <button class="secondary" id="deleteBtn">Delete this date's entry</button>
+    </div>
+    <div class="status" id="saveStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h2>View Logged Entries</h2>
+    <label>Select Print/Style (leave empty = all with entries)</label>
+    <div class="dropdown" id="viewDropdown">
+      <button type="button" class="ddbtn" id="viewDropdownBtn">All entries <span>▾</span></button>
+      <div class="ddpanel" id="viewDropdownPanel" hidden>
+        <div class="ddactions">
+          <button class="secondary" type="button" id="selectAllBtn">Select all</button>
+          <button class="secondary" type="button" id="clearSelBtn">Clear</button>
+        </div>
+        <div id="ddOptions"></div>
+      </div>
+    </div>
+    <div class="tblwrap">
+      <table id="viewTable"></table>
+    </div>
+    <div class="count" id="viewCount"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Download</h2>
+    <div class="muted">If combos are selected above, only those are exported. Otherwise everything (all 302 print/style combos, and the full daily log) is exported.</div>
+    <div class="btnrow">
+      <button id="exportBtn">Download (.xlsx — 2 sheets)</button>
+    </div>
+    <div class="status" id="statusMsg"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="window.__xlsxLoadFailed=true;"></script>
+
+<script type="module">
+// ─────────────────────────────────────────────
+//  Firebase Setup
+// ─────────────────────────────────────────────
+import { initializeApp }           from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAnalytics }            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  deleteField,
+  collection,
+  getDocs,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyCDrutMUttv1Xuhn13kAKWHOSV-9FBBmlU",
+  authDomain:        "productionreport-ae47f.firebaseapp.com",
+  projectId:         "productionreport-ae47f",
+  storageBucket:     "productionreport-ae47f.firebasestorage.app",
+  messagingSenderId: "678318027780",
+  appId:             "1:678318027780:web:2fa389218e7af89371f151",
+  measurementId:     "G-58ZDTFKWRX"
+};
+
+const app       = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db        = getFirestore(app);
+
+// ─────────────────────────────────────────────
+//  Sync bar helpers
+// ─────────────────────────────────────────────
+const syncBar = document.getElementById("syncBar");
+const syncMsg = document.getElementById("syncMsg");
+
+function setSyncState(state, msg) {
+  syncBar.className = "sync-bar " + state;
+  syncMsg.textContent = msg;
+}
+
+// ─────────────────────────────────────────────
+//  Static data
+// ─────────────────────────────────────────────
+const SIZE_ORDER = ["39","42","45","47","49","50","56","62","68","74","80","86","92","98","104","110","116","122","128","134","140","146","152","158","164","L","M","S","XL","XXL"];
+const PROCESSES  = ["Cutting","Sewing","Final Checking","Rejection/Rework"];
+
+const RAW = `Acorn Friends - Brown|Baggy Pants|360|80:96,92:110,104:88,116:38,128:14,140:4,152:4,164:6
+Acorn Friends - Brown|Bonnet|112|45:24,47:64,49:24
+Acorn Friends - Brown|Dungaree|176|68:28,74:38,80:40,86:42,92:14,98:8,104:2,110:2,122:2
+Acorn Friends - Brown|Hood Suit|66|80:24,92:24,104:8,116:2,128:2,140:2,152:2,164:2
+Acorn Friends - Brown|Kimono Body|22|62:16,68:6
+Acorn Friends - Brown|Knot Hat|32|39:2,45:12,47:16,49:2
+Acorn Friends - Brown|Long Sleeve Lap neck Body|102|50:2,56:2,62:4,68:18,74:28,80:30,86:14,92:4
+Acorn Friends - Brown|Long Sleeve Lap neck Suit|66|50:2,56:2,62:2,68:8,74:18,80:20,86:12,92:2
+Acorn Friends - Brown|Long Sleeve Top|352|86:58,92:72,98:70,104:64,110:28,116:24,122:10,128:8,134:4,140:6,146:2,158:6
+Acorn Friends - Brown|Play Suit|92|68:10,74:22,80:24,86:28,92:8
+Acorn Friends - Brown|Short Pants|50|80:8,92:18,104:16,116:8
+Acorn Friends - Brown|Short Sleeve Top|168|86:20,92:30,98:32,104:28,110:20,116:16,122:10,128:4,134:2,140:4,158:2
+Acorn Friends - Brown|Summer Suit|98|68:16,74:24,80:26,86:26,92:6
+Acorn Friends - Brown|Zip Suit|70|68:10,74:12,80:12,86:14,92:8,98:6,104:6,116:2
+Acorn Friends - Pale Green|Baggy Pants|304|80:92,92:100,104:82,116:26,128:4
+Acorn Friends - Pale Green|Bonnet|112|42:2,45:22,47:72,49:16
+Acorn Friends - Pale Green|Dungaree|164|68:24,74:44,80:44,86:36,92:10,98:4,104:2
+Acorn Friends - Pale Green|Kimono Body|32|50:2,56:2,62:20,68:2,74:6
+Acorn Friends - Pale Green|Knot Hat|40|45:18,47:20,49:2
+Acorn Friends - Pale Green|Long Sleeve Lap neck Body|88|62:2,68:18,74:28,80:30,86:8,92:2
+Acorn Friends - Pale Green|Long Sleeve Lap neck Suit|78|68:10,74:26,80:26,86:14,92:2
+Acorn Friends - Pale Green|Long Sleeve Top|290|86:58,92:64,98:64,104:54,110:26,116:18,122:4,128:2
+Acorn Friends - Pale Green|Play Suit|106|68:16,74:26,80:28,86:30,92:6
+Acorn Friends - Pale Green|Short Pants|76|80:12,92:24,104:22,116:14,128:4
+Acorn Friends - Pale Green|Short Sleeve Top|160|86:20,92:32,98:34,104:30,110:22,116:16,122:4,128:2
+Acorn Friends - Pale Green|Summer Suit|110|68:18,74:28,80:28,86:30,92:6
+Acorn Friends - Pale Green|Zip Suit|84|50:2,56:2,62:2,68:10,74:18,80:16,86:12,92:6,98:6,104:2,110:2,128:2,140:4
+Black|More Than a Fling - Baggy Pants|154|80:30,92:38,104:32,116:20,128:12,140:8,152:6,164:8
+Black|More Than a Fling - Lap Neck Body|6|80:2,86:2,92:2
+Black|More Than a Fling - Long  sleeve top|46|80:10,92:14,104:8,116:6,164:2,S:4,XXL:2
+Black|More Than a Fling - Short sleeve top|12|104:2,116:2,128:4,140:2,152:2
+Black|More Than a Fling- Leggings|14|104:2,116:4,128:6,140:2
+Black|Terry Pants|80|80:10,86:8,92:14,98:8,104:12,116:2,128:2,134:2,140:2,158:2,L:4,M:6,S:4,XL:2,XXL:2
+Bougainvillea 17-3725|More Than a Fling - Baggy Pants|170|80:32,92:46,104:46,116:24,128:8,140:4,152:4,164:6
+Bougainvillea 17-3725|More Than a Fling - Lap Neck Body|68|68:18,74:20,80:18,86:12
+Bougainvillea 17-3725|More Than a Fling - Long  sleeve top|148|80:30,92:46,104:40,116:16,128:6,140:4,152:2,164:4
+Bougainvillea 17-3725|More Than a Fling - Short sleeve top|130|80:22,92:24,104:28,116:20,128:10,140:10,152:8,164:8
+Bougainvillea 17-3725|More Than a Fling-  Short Pants|110|80:16,92:22,104:24,116:18,128:8,140:8,152:8,164:6
+Bougainvillea 17-3725|Terry Pants|110|80:14,86:14,92:18,98:16,104:20,110:4,116:8,122:4,128:2,134:2,140:2,146:2,158:4
+Christmas Goat|Baggy Pants|156|80:32,92:42,104:40,116:20,128:8,140:4,152:4,164:6
+Christmas Goat|Bonnet|48|45:6,47:34,49:8
+Christmas Goat|Dungaree|132|68:18,74:38,80:34,86:28,92:8,98:2,104:2,110:2
+Christmas Goat|Kimono Body|18|62:18
+Christmas Goat|Knot Hat|22|45:10,47:12
+Christmas Goat|Long Sleeve Lap neck Body|46|68:8,74:16,80:14,86:8
+Christmas Goat|Long Sleeve Lap neck Suit|58|50:2,56:2,62:2,68:8,74:16,80:16,86:10,92:2
+Christmas Goat|Long Sleeve Top|164|86:20,92:32,98:30,104:30,110:18,116:14,122:6,128:4,140:4,158:6
+Christmas Goat|Play Suit|74|68:10,74:20,80:20,86:20,92:4
+Christmas Goat|Short Pants|36|80:6,92:12,104:10,116:6,140:2
+Christmas Goat|Short Sleeve Top|60|86:8,92:12,98:14,104:12,110:8,116:6
+Christmas Goat|Summer Suit|60|68:10,74:18,80:16,86:16
+Christmas Goat|Zip Suit|58|50:2,56:2,62:2,68:10,74:12,80:12,86:10,92:4,98:4
+Clover  – Black/ Light Brown|Baggy Pants|860|80:222,92:266,104:232,116:98,128:26,140:8,152:2,164:6
+Clover  – Black/ Light Brown|Bonnet|270|42:2,45:48,47:170,49:50
+Clover  – Black/ Light Brown|Dungaree|384|68:50,74:98,80:98,86:86,92:34,98:12,104:4,110:2
+Clover  – Black/ Light Brown|Hood Suit|206|80:82,92:74,104:28,116:6,128:4,140:4,152:4,164:4
+Clover  – Black/ Light Brown|Kimono Body|62|62:38,68:10,74:14
+Clover  – Black/ Light Brown|Knot Hat|114|45:50,47:54,49:10
+Clover  – Black/ Light Brown|Long Sleeve Lap neck Body|274|62:2,68:56,74:82,80:80,86:50,92:4
+Clover  – Black/ Light Brown|Long Sleeve Lap neck Suit|184|62:2,68:24,74:52,80:58,86:40,92:8
+Clover  – Black/ Light Brown|Long Sleeve Skater Dress|154|86:18,92:26,98:32,104:30,110:24,116:14,122:4,128:2,140:2,158:2
+Clover  – Black/ Light Brown|Long Sleeve Top|728|86:128,92:156,98:156,104:130,110:72,116:46,122:18,128:12,140:4,158:6
+Clover  – Black/ Light Brown|Long sleeve Gather Dress|282|86:38,92:56,98:60,104:52,110:42,116:20,122:8,128:4,134:2
+Clover  – Black/ Light Brown|Play Suit|270|68:40,74:72,80:74,86:68,92:16
+Clover  – Black/ Light Brown|Short Pants|192|80:44,92:62,104:56,116:24,128:4,152:2
+Clover  – Black/ Light Brown|Short Sleeve Top|376|86:64,92:84,98:82,104:72,110:46,116:24,122:2,128:2
+Clover  – Black/ Light Brown|Summer Suit|240|68:40,74:66,80:66,86:58,92:10
+Clover  – Black/ Light Brown|Zip Suit|168|68:22,74:42,80:44,86:30,92:16,98:8,104:6
+Clover  – Brown/ Yellow|Baggy Pants|418|80:108,92:138,104:118,116:48,128:6
+Clover  – Brown/ Yellow|Bonnet|148|45:28,47:92,49:28
+Clover  – Brown/ Yellow|Dungaree|222|68:30,74:60,80:62,86:48,92:16,98:4,104:2
+Clover  – Brown/ Yellow|Kimono Body|34|62:26,68:2,74:6
+Clover  – Brown/ Yellow|Knot Hat|72|45:34,47:32,49:6
+Clover  – Brown/ Yellow|Long Sleeve Lap neck Body|132|68:26,74:48,80:44,86:14
+Clover  – Brown/ Yellow|Long Sleeve Lap neck Suit|90|68:10,74:30,80:30,86:16,92:4
+Clover  – Brown/ Yellow|Long Sleeve Top|330|86:64,92:78,98:66,104:64,110:32,116:22,122:4
+Clover  – Brown/ Yellow|Play Suit|190|68:24,74:54,80:56,86:48,92:8
+Clover  – Brown/ Yellow|Short Pants|124|80:30,92:42,104:38,116:14
+Clover  – Brown/ Yellow|Short Sleeve Top|230|86:38,92:50,98:52,104:48,110:28,116:14
+Clover  – Brown/ Yellow|Summer Suit|176|68:24,74:50,80:52,86:44,92:6
+Clover  – Brown/ Yellow|Zip Suit|70|68:12,74:18,80:18,86:12,92:6,98:4
+Clover  – Dark Red|Baggy Pants|468|80:120,92:142,104:128,116:52,128:16,140:4,152:2,164:4
+Clover  – Dark Red|Bonnet|176|45:30,47:108,49:38
+Clover  – Dark Red|Dungaree|278|68:36,74:70,80:70,86:62,92:26,98:10,104:4
+Clover  – Dark Red|Kimono Body|36|62:30,68:2,74:4
+Clover  – Dark Red|Knot Hat|76|45:34,47:34,49:8
+Clover  – Dark Red|Long Sleeve Lap neck Body|146|68:26,74:46,80:52,86:20,92:2
+Clover  – Dark Red|Long Sleeve Lap neck Suit|90|68:10,74:30,80:30,86:16,92:4
+Clover  – Dark Red|Long Sleeve Skater Dress|84|86:8,92:14,98:18,104:16,110:12,116:10,122:2,158:4
+Clover  – Dark Red|Long Sleeve Top|426|86:82,92:94,98:86,104:74,110:40,116:26,122:8,128:6,140:4,158:6
+Clover  – Dark Red|Long sleeve Gather Dress|192|86:22,92:34,98:38,104:36,110:28,116:20,122:6,128:6,140:2
+Clover  – Dark Red|Play Suit|204|68:24,74:56,80:58,86:54,92:12
+Clover  – Dark Red|Short Pants|120|80:30,92:42,104:36,116:12
+Clover  – Dark Red|Short Sleeve Top|218|86:38,92:48,98:50,104:42,110:24,116:14,122:2
+Clover  – Dark Red|Summer Suit|186|68:24,74:54,80:54,86:46,92:8
+Clover  – Dark Red|Zip Suit|82|68:12,74:22,80:22,86:14,92:6,98:4,104:2
+Cultivated - Black|Baggy Pants|702|80:182,92:212,104:176,116:74,128:22,140:8,152:2,164:6,L:4,M:6,S:4,XL:4,XXL:2
+Cultivated - Black|Bonnet|194|45:40,47:104,49:50
+Cultivated - Black|Dungaree|324|68:36,74:70,80:72,86:66,92:34,98:24,104:12,110:6,116:2,122:2
+Cultivated - Black|Hood Suit|196|80:68,92:68,104:30,116:10,128:6,140:6,152:4,164:4
+Cultivated - Black|Kimono Body|34|62:20,68:4,74:10
+Cultivated - Black|Knot Hat|36|45:14,47:20,49:2
+Cultivated - Black|Long Sleeve Lap neck Body|160|50:2,56:2,62:2,68:30,74:46,80:42,86:26,92:10
+Cultivated - Black|Long Sleeve Lap neck Suit|106|50:2,56:2,62:2,68:10,74:28,80:28,86:24,92:10
+Cultivated - Black|Long Sleeve Skater Dress|74|86:10,92:10,98:14,104:10,110:10,116:8,128:2,140:2,152:2,158:6
+Cultivated - Black|Long Sleeve Top|636|86:110,92:132,98:130,104:106,110:56,116:42,122:14,128:8,134:2,140:6,146:2,152:2,158:8,L:4,M:4,S:4,XL:4,XXL:2
+Cultivated - Black|Long sleeve Gather Dress|160|86:16,92:24,98:28,104:20,110:18,116:16,122:6,128:2,140:2,L:6,M:6,S:6,XL:6,XXL:4
+Cultivated - Black|Play Suit|152|68:14,74:36,80:44,86:42,92:16
+Cultivated - Black|Short Pants|120|80:16,92:38,104:34,116:18,128:6,140:4,152:2,164:2
+Cultivated - Black|Short Sleeve Top|342|86:40,92:62,98:66,104:62,110:38,116:30,122:12,128:8,134:6,140:8,146:2,152:2,158:6
+Cultivated - Black|Summer Suit|118|68:12,74:30,80:32,86:34,92:10
+Cultivated - Black|Zip Suit|150|68:10,74:22,80:24,86:28,92:22,98:10,104:8,110:2,116:4,122:2,128:4,134:2,140:4,146:2,152:2,158:4
+Cultivated - Pink|Baggy Pants|532|80:140,92:164,104:136,116:58,128:18,140:6,152:2,164:8
+Cultivated - Pink|Bonnet|188|45:40,47:104,49:44
+Cultivated - Pink|Dungaree|302|68:34,74:70,80:68,86:64,92:34,98:16,104:8,110:4,116:2,122:2
+Cultivated - Pink|Hood Suit|184|80:66,92:62,104:28,116:10,128:6,140:6,152:2,164:4
+Cultivated - Pink|Kimono Body|50|62:32,68:6,74:12
+Cultivated - Pink|Knot Hat|46|45:18,47:24,49:4
+Cultivated - Pink|Long Sleeve Lap neck Body|152|56:2,62:2,68:28,74:44,80:44,86:26,92:6
+Cultivated - Pink|Long Sleeve Lap neck Suit|114|68:14,74:32,80:34,86:24,92:10
+Cultivated - Pink|Long Sleeve Skater Dress|80|86:8,92:8,98:16,104:14,110:14,116:10,122:2,128:2,152:2,158:4
+Cultivated - Pink|Long Sleeve Top|508|86:82,92:96,98:98,104:88,110:52,116:40,122:14,128:10,134:6,140:6,146:4,152:4,158:8
+Cultivated - Pink|Long sleeve Gather Dress|250|86:32,92:44,98:48,104:42,110:38,116:22,122:10,128:8,140:4,158:2
+Cultivated - Pink|Play Suit|160|68:18,74:40,80:40,86:44,92:18
+Cultivated - Pink|Short Pants|104|80:20,92:38,104:30,116:16
+Cultivated - Pink|Short Sleeve Top|264|86:32,92:48,98:52,104:48,110:32,116:24,122:8,128:6,134:2,140:4,146:2,158:6
+Cultivated - Pink|Summer Suit|118|68:18,74:30,80:30,86:32,92:8
+Cultivated - Pink|Zip Suit|132|68:10,74:26,80:28,86:22,92:14,98:8,104:6,110:2,116:4,122:2,128:4,140:4,158:2
+Jester Red - 19-1862|More Than a Fling - Baggy Pants|172|80:32,92:50,104:42,116:26,128:8,140:4,152:4,164:6
+Jester Red - 19-1862|More Than a Fling - Lap Neck Body|46|68:12,74:14,80:12,86:8
+Jester Red - 19-1862|More Than a Fling - Long  sleeve top|134|80:26,92:38,104:32,116:12,128:4,140:4,152:2,164:6,L:2,M:4,XL:2,XXL:2
+Jester Red - 19-1862|More Than a Fling - Short sleeve top|96|80:6,92:18,104:22,116:14,128:12,140:10,152:8,164:6
+Jester Red - 19-1862|More Than a Fling-  Short Pants|82|80:10,92:18,104:20,116:12,128:6,140:6,152:6,164:4
+Jester Red - 19-1862|Terry Pants|136|80:10,86:16,92:22,98:20,104:24,110:6,116:12,128:4,140:4,152:2,158:4,L:2,M:2,S:4,XL:2,XXL:2
+Multi Radish  – Brown|Baggy Pants|390|80:98,92:128,104:110,116:48,128:6
+Multi Radish  – Brown|Bonnet|166|45:22,47:108,49:36
+Multi Radish  – Brown|Dungaree|256|68:26,74:58,80:64,86:64,92:26,98:14,104:4
+Multi Radish  – Brown|Kimono Body|30|62:20,68:4,74:6
+Multi Radish  – Brown|Knot Hat|94|45:42,47:48,49:4
+Multi Radish  – Brown|Long Sleeve Lap neck Body|230|68:42,74:62,80:70,86:42,92:14
+Multi Radish  – Brown|Long Sleeve Lap neck Suit|148|68:20,74:38,80:42,86:34,92:14
+Multi Radish  – Brown|Long Sleeve Top|438|86:76,92:92,98:94,104:80,110:50,116:28,122:12,134:4,146:2
+Multi Radish  – Brown|Play Suit|184|68:22,74:52,80:52,86:44,92:14
+Multi Radish  – Brown|Short Pants|126|80:24,92:42,104:38,116:22
+Multi Radish  – Brown|Short Sleeve Top|282|86:40,92:54,98:60,104:50,110:46,116:22,122:6,134:2,146:2
+Multi Radish  – Brown|Summer Suit|168|68:22,74:48,80:48,86:40,92:10
+Multi Radish  – Brown|Zip Suit|120|68:16,74:30,80:34,86:26,92:10,98:4
+Multi Radish  – Pink|Baggy Pants|556|80:132,92:168,104:152,116:78,128:16,140:4,152:2,164:4
+Multi Radish  – Pink|Bonnet|214|42:2,45:28,47:148,49:36
+Multi Radish  – Pink|Dungaree|400|68:42,74:96,80:104,86:90,92:40,98:16,104:8,110:2,116:2
+Multi Radish  – Pink|Kimono Body|48|62:36,68:4,74:8
+Multi Radish  – Pink|Knot Hat|112|45:56,47:50,49:6
+Multi Radish  – Pink|Long Sleeve Lap neck Body|326|62:2,68:54,74:88,80:92,86:70,92:20
+Multi Radish  – Pink|Long Sleeve Lap neck Suit|250|68:38,74:74,80:78,86:48,92:12
+Multi Radish  – Pink|Long Sleeve Skater Dress|196|86:20,92:28,98:34,104:38,110:30,116:22,122:14,128:8,158:2
+Multi Radish  – Pink|Long Sleeve Top|618|86:108,92:126,98:126,104:114,110:68,116:46,122:14,128:8,134:2,140:2,158:4
+Multi Radish  – Pink|Long sleeve Gather Dress|268|86:38,92:50,98:52,104:52,110:38,116:24,122:8,128:6
+Multi Radish  – Pink|Play Suit|266|68:36,74:68,80:74,86:64,92:24
+Multi Radish  – Pink|Short Pants|140|80:30,92:48,104:40,116:20,128:2
+Multi Radish  – Pink|Short Sleeve Top|400|86:64,92:78,98:86,104:72,110:56,116:30,122:8,128:2,158:4
+Multi Radish  – Pink|Summer Suit|254|68:44,74:70,80:72,86:56,92:12
+Multi Radish  – Pink|Zip Suit|208|68:24,74:46,80:54,86:42,92:22,98:12,104:4,110:2,116:2
+Multi Radish  – Yellow|Baggy Pants|420|80:102,92:134,104:120,116:60,128:4
+Multi Radish  – Yellow|Bonnet|170|45:26,47:116,49:28
+Multi Radish  – Yellow|Dungaree|264|68:36,74:68,80:68,86:66,92:18,98:6,104:2
+Multi Radish  – Yellow|Kimono Body|44|62:36,68:2,74:6
+Multi Radish  – Yellow|Knot Hat|100|45:50,47:46,49:4
+Multi Radish  – Yellow|Long Sleeve Lap neck Body|226|68:42,74:64,80:66,86:44,92:10
+Multi Radish  – Yellow|Long Sleeve Lap neck Suit|144|68:22,74:42,80:44,86:30,92:6
+Multi Radish  – Yellow|Long Sleeve Top|486|86:90,92:104,98:102,104:94,110:56,116:36,122:4
+Multi Radish  – Yellow|Play Suit|216|68:28,74:62,80:62,86:54,92:10
+Multi Radish  – Yellow|Short Pants|116|80:24,92:38,104:36,116:18
+Multi Radish  – Yellow|Short Sleeve Top|258|86:44,92:52,98:54,104:48,110:36,116:20,122:2,152:2
+Multi Radish  – Yellow|Summer Suit|186|68:28,74:54,80:54,86:46,92:4
+Multi Radish  – Yellow|Zip Suit|162|68:24,74:38,80:42,86:30,92:14,98:8,104:2,110:2,116:2
+Night Willow|Baggy Pants|364|80:66,92:96,104:82,116:46,128:20,140:8,152:4,164:10,L:8,M:8,S:6,XL:6,XXL:4
+Night Willow|Bonnet|92|42:2,45:18,47:58,49:14
+Night Willow|Dungaree|234|68:34,74:50,80:52,86:46,92:30,98:12,104:4,110:2,116:2,122:2
+Night Willow|Hood Suit|146|80:38,92:34,104:22,116:14,128:12,140:12,152:6,164:8
+Night Willow|Kimono Body|36|62:28,68:2,74:6
+Night Willow|Knot Hat|26|45:10,47:16
+Night Willow|Long Sleeve Lap neck Body|112|50:2,56:2,62:2,68:26,74:34,80:32,86:14
+Night Willow|Long Sleeve Lap neck Suit|98|50:2,56:2,62:2,68:18,74:30,80:28,86:12,92:4
+Night Willow|Long Sleeve Top|382|86:40,92:62,98:62,104:58,110:36,116:32,122:20,128:14,134:12,140:8,146:6,152:4,158:10,L:4,M:4,S:4,XL:4,XXL:2
+Night Willow|Long sleeve Gather Dress|28|L:6,M:6,S:6,XL:6,XXL:4
+Night Willow|Play Suit|98|68:16,74:22,80:24,86:28,92:8
+Night Willow|Short Pants|64|80:8,92:16,104:18,116:10,128:4,140:4,152:2,164:2
+Night Willow|Short Sleeve Top|152|86:10,92:18,98:22,104:24,110:16,116:16,122:4,128:6,134:2,140:6,146:2,158:6,L:4,M:4,S:4,XL:4,XXL:4
+Night Willow|Summer Suit|78|68:16,74:22,80:20,86:20
+Night Willow|Zip Suit|206|62:4,68:12,74:26,80:28,86:22,92:16,98:12,104:10,110:10,116:12,122:10,128:12,134:8,140:12,146:4,152:4,158:4
+Radish  – Bell Blue|Baggy Pants|556|80:138,92:170,104:150,116:72,128:14,140:6,152:2,164:4
+Radish  – Bell Blue|Bonnet|204|42:2,45:22,47:152,49:28
+Radish  – Bell Blue|Dungaree|348|68:44,74:88,80:90,86:80,92:26,98:14,104:4,110:2
+Radish  – Bell Blue|Hood Suit|104|80:38,92:38,104:16,116:4,128:6,140:2
+Radish  – Bell Blue|Kimono Body|46|62:36,68:4,74:6
+Radish  – Bell Blue|Knot Hat|106|45:56,47:48,49:2
+Radish  – Bell Blue|Long Sleeve Lap neck Body|248|68:46,74:68,80:72,86:44,92:18
+Radish  – Bell Blue|Long Sleeve Lap neck Suit|218|68:36,74:60,80:66,86:44,92:12
+Radish  – Bell Blue|Long Sleeve Skater Dress|122|86:18,92:24,98:30,104:24,110:16,116:8,122:2
+Radish  – Bell Blue|Long Sleeve Top|558|86:92,92:108,98:118,104:102,110:64,116:42,122:16,128:8,134:6,140:2
+Radish  – Bell Blue|Long sleeve Gather Dress|150|86:24,92:32,98:34,104:30,110:18,116:10,122:2
+Radish  – Bell Blue|Play Suit|242|68:36,74:64,80:68,86:60,92:14
+Radish  – Bell Blue|Short Pants|146|80:30,92:50,104:48,116:18
+Radish  – Bell Blue|Short Sleeve Top|322|86:50,92:62,98:66,104:56,110:46,116:28,122:2,128:2,140:2,L:2,M:4,XL:2
+Radish  – Bell Blue|Summer Suit|226|68:38,74:62,80:64,86:54,92:8
+Radish  – Bell Blue|Zip Suit|196|68:24,74:40,80:46,86:38,92:20,98:10,104:8,110:4,116:4,122:2
+Radish  – Black|Baggy Pants|380|80:80,92:122,104:112,116:66
+Radish  – Black|Bonnet|270|47:270
+Radish  – Black|Dungaree|472|68:70,74:162,80:150,86:90
+Radish  – Black|Hood Suit|90|92:38,104:36,116:16
+Radish  – Black|Kimono Body|82|62:82
+Radish  – Black|Knot Hat|182|45:80,47:102
+Radish  – Black|Long Sleeve Lap neck Body|462|68:90,74:152,80:150,86:70
+Radish  – Black|Long Sleeve Lap neck Suit|462|68:90,74:152,80:150,86:70
+Radish  – Black|Long Sleeve Skater Dress|364|86:46,92:70,98:82,104:80,110:50,116:36
+Radish  – Black|Long Sleeve Top|766|86:70,92:152,98:152,104:152,110:150,116:90
+Radish  – Black|Long sleeve Gather Dress|364|86:46,92:70,98:82,104:80,110:50,116:36
+Radish  – Black|Play Suit|362|68:60,74:112,80:110,86:80
+Radish  – Black|Short Pants|358|80:80,92:112,104:100,116:66
+Radish  – Black|Short Sleeve Top|652|86:100,92:130,98:132,104:130,110:90,116:70
+Radish  – Black|Summer Suit|382|68:60,74:122,80:120,86:80
+Radish  – Black|Zip Suit|224|68:46,74:72,80:70,86:36
+Radish  – Lavender|Baggy Pants|592|80:146,92:188,104:160,116:70,128:18,140:6,152:2,164:2
+Radish  – Lavender|Bonnet|226|45:34,47:154,49:38
+Radish  – Lavender|Dungaree|364|68:48,74:92,80:92,86:82,92:26,98:14,104:6,110:2,116:2
+Radish  – Lavender|Hood Suit|112|80:44,92:40,104:14,116:6,128:4,140:4
+Radish  – Lavender|Kimono Body|62|62:46,68:6,74:10
+Radish  – Lavender|Knot Hat|120|45:60,47:54,49:6
+Radish  – Lavender|Long Sleeve Lap neck Body|276|68:54,74:80,80:80,86:50,92:12
+Radish  – Lavender|Long Sleeve Lap neck Suit|236|68:34,74:66,80:70,86:50,92:16
+Radish  – Lavender|Long Sleeve Skater Dress|146|86:20,92:24,98:30,104:32,110:22,116:12,122:4,128:2
+Radish  – Lavender|Long Sleeve Top|552|86:94,92:112,98:112,104:94,110:62,116:44,122:18,128:10,134:4,140:2
+Radish  – Lavender|Long sleeve Gather Dress|268|86:40,92:50,98:56,104:48,110:38,116:20,122:12,128:4
+Radish  – Lavender|Play Suit|256|68:32,74:64,80:72,86:64,92:24
+Radish  – Lavender|Short Pants|172|80:38,92:52,104:48,116:24,128:4,140:2,152:2,164:2
+Radish  – Lavender|Short Sleeve Top|346|86:54,92:70,98:72,104:60,110:42,116:24,122:4,128:2,134:2,140:2,146:2,152:2,158:2,L:2,M:4,XL:2
+Radish  – Lavender|Sleeveless Gather Dress|294|86:32,92:50,98:56,104:52,110:46,116:28,122:16,128:10,140:4
+Radish  – Lavender|Summer Suit|226|68:34,74:62,80:62,86:54,92:14
+Radish  – Lavender|Zip Suit|170|68:18,74:36,80:42,86:34,92:20,98:10,104:6,110:2,116:2
+Strawberries and Blueberries  – Blue|Baggy Pants|860|80:228,92:264,104:220,116:92,128:28,140:10,152:6,164:12
+Strawberries and Blueberries  – Blue|Bonnet|262|42:2,45:48,47:152,49:60
+Strawberries and Blueberries  – Blue|Dungaree|458|68:62,74:110,80:112,86:100,92:34,98:18,104:10,110:6,116:4,122:2
+Strawberries and Blueberries  – Blue|Hood Suit|250|80:88,92:86,104:34,116:12,128:10,140:8,152:6,164:6
+Strawberries and Blueberries  – Blue|Kimono Body|78|62:48,68:12,74:18
+Strawberries and Blueberries  – Blue|Knot Hat|126|45:52,47:62,49:12
+Strawberries and Blueberries  – Blue|Long Sleeve Lap neck Body|304|62:2,68:60,74:90,80:92,86:52,92:8
+Strawberries and Blueberries  – Blue|Long Sleeve Lap neck Suit|210|62:2,68:34,74:58,80:62,86:44,92:10
+Strawberries and Blueberries  – Blue|Long Sleeve Skater Dress|160|86:20,92:26,98:28,104:30,110:20,116:14,122:8,128:4,134:2,152:4,158:4
+Strawberries and Blueberries  – Blue|Long Sleeve Top|750|86:128,92:160,98:160,104:128,110:80,116:48,122:16,128:10,134:2,140:6,146:2,152:2,158:8
+Strawberries and Blueberries  – Blue|Long sleeve Gather Dress|380|86:50,92:68,98:72,104:74,110:52,116:32,122:20,128:10,140:2
+Strawberries and Blueberries  – Blue|Play Suit|308|68:44,74:84,80:84,86:76,92:20
+Strawberries and Blueberries  – Blue|Short Pants|216|80:40,92:64,104:60,116:28,128:10,140:8,152:2,164:4
+Strawberries and Blueberries  – Blue|Short Sleeve Top|568|86:82,92:104,98:110,104:96,110:68,116:48,122:20,128:12,134:10,140:6,146:4,158:8
+Strawberries and Blueberries  – Blue|Sleeveless Gather Dress|276|86:40,92:48,98:50,104:44,110:34,116:22,122:20,128:12,140:4,158:2
+Strawberries and Blueberries  – Blue|Summer Suit|252|68:38,74:66,80:68,86:60,92:20
+Strawberries and Blueberries  – Blue|Zip Suit|228|68:28,74:36,80:44,86:34,92:20,98:10,104:10,110:6,116:8,122:4,128:8,134:4,140:6,146:4,152:2,158:4
+Strawberries and Blueberries  – Pink|Baggy Pants|908|80:228,92:274,104:230,116:98,128:30,140:10,152:6,164:10,L:4,M:4,S:6,XL:4,XXL:4
+Strawberries and Blueberries  – Pink|Bonnet|278|42:2,45:52,47:160,49:64
+Strawberries and Blueberries  – Pink|Dungaree|490|68:70,74:114,80:120,86:106,92:40,98:16,104:12,110:6,116:4,122:2
+Strawberries and Blueberries  – Pink|Hood Suit|256|80:90,92:86,104:36,116:16,128:8,140:8,152:6,164:6
+Strawberries and Blueberries  – Pink|Kimono Body|78|56:4,62:44,68:14,74:16
+Strawberries and Blueberries  – Pink|Knot Hat|128|45:52,47:64,49:12
+Strawberries and Blueberries  – Pink|Long Sleeve Lap neck Body|318|50:2,56:2,62:2,68:60,74:90,80:94,86:54,92:14
+Strawberries and Blueberries  – Pink|Long Sleeve Lap neck Suit|220|56:2,62:4,68:34,74:62,80:64,86:42,92:12
+Strawberries and Blueberries  – Pink|Long Sleeve Skater Dress|198|86:20,92:28,98:36,104:38,110:30,116:22,122:12,128:4,146:2,152:2,158:4
+Strawberries and Blueberries  – Pink|Long Sleeve Top|842|86:132,92:170,98:174,104:140,110:88,116:56,122:24,128:14,134:6,140:8,146:4,152:4,158:10,L:2,M:2,S:4,XL:2,XXL:2
+Strawberries and Blueberries  – Pink|Long sleeve Gather Dress|474|86:60,92:78,98:86,104:82,110:60,116:42,122:26,128:12,134:2,140:4,L:4,M:4,S:6,XL:4,XXL:4
+Strawberries and Blueberries  – Pink|Play Suit|336|68:44,74:90,80:92,86:84,92:26
+Strawberries and Blueberries  – Pink|Short Pants|218|80:42,92:62,104:58,116:34,128:12,140:6,152:2,164:2
+Strawberries and Blueberries  – Pink|Short Sleeve Skater Dress|196|86:26,92:30,98:34,104:30,110:22,116:18,122:14,128:10,140:6,158:6
+Strawberries and Blueberries  – Pink|Short Sleeve Top|570|86:76,92:100,98:106,104:96,110:68,116:44,122:20,128:12,134:8,140:6,146:2,158:6,L:6,M:6,S:4,XL:6,XXL:4
+Strawberries and Blueberries  – Pink|Summer Suit|256|68:40,74:68,80:70,86:62,92:16
+Strawberries and Blueberries  – Pink|Zip Suit|286|50:2,56:2,62:2,68:36,74:44,80:50,86:42,92:32,98:14,104:12,110:6,116:6,122:8,128:8,134:6,140:6,146:4,152:2,158:4
+Strong Blue 18-4051|More Than a Fling - Baggy Pants|196|80:36,92:60,104:46,116:24,128:10,140:6,152:6,164:8
+Strong Blue 18-4051|More Than a Fling - Lap Neck Body|66|68:16,74:18,80:18,86:12,92:2
+Strong Blue 18-4051|More Than a Fling - Long  sleeve top|132|80:26,92:38,104:36,116:16,128:6,140:4,152:2,164:4
+Strong Blue 18-4051|More Than a Fling - Short sleeve top|70|80:10,92:18,104:18,116:8,128:4,140:4,152:4,164:4
+Strong Blue 18-4051|More Than a Fling-  Short Pants|88|80:10,92:18,104:16,116:12,128:8,140:8,152:8,164:8
+Strong Blue 18-4051|Terry Pants|164|80:14,86:18,92:26,98:22,104:28,110:10,116:14,122:4,128:4,134:2,140:2,146:2,152:2,158:4,L:2,M:2,S:4,XL:2,XXL:2
+Tortoise Shell - 19-1241|More Than a Fling - Baggy Pants|98|80:24,92:32,104:28,116:12,128:2
+Tortoise Shell - 19-1241|More Than a Fling - Lap Neck Body|44|68:10,74:12,80:12,86:8,92:2
+Tortoise Shell - 19-1241|More Than a Fling - Long  sleeve top|96|80:24,92:32,104:26,116:10,128:2,164:2
+Tortoise Shell - 19-1241|More Than a Fling - Short sleeve top|58|80:12,92:20,104:18,116:8
+Tortoise Shell - 19-1241|Terry Pants|94|80:10,86:16,92:16,98:16,104:18,110:8,116:10
+Velour Strawberry – Blue|Velour Dungaree|320|80:118,86:104,92:64,98:22,104:12
+Velour Strawberry – Blue|Velour Pants|848|80:100,86:158,92:174,98:156,104:118,110:56,116:36,122:18,128:10,134:4,140:6,146:2,152:2,158:8
+Velour Strawberry – Blue|Velour Top|620|80:134,92:194,104:174,116:82,128:18,140:8,152:4,164:6
+Velour Strawberry – Pink|Velour Dungaree|368|80:126,86:118,92:76,98:32,104:16
+Velour Strawberry – Pink|Velour Pants|904|80:106,86:172,92:184,98:164,104:122,110:64,116:40,122:22,128:10,134:2,140:6,146:2,152:2,158:8
+Velour Strawberry – Pink|Velour Top|660|80:142,92:210,104:184,116:92,128:16,140:6,152:4,164:6
+Velour Tomatoes – Orange|Velour Dungaree|192|80:62,86:68,92:40,98:14,104:8
+Velour Tomatoes – Orange|Velour Pants|440|80:52,86:82,92:86,98:80,104:64,110:30,116:20,122:4,128:4,134:2,140:4,146:2,152:2,158:8
+Velour Tomatoes – Orange|Velour Top|336|80:64,92:104,104:96,116:48,128:8,140:6,152:4,164:6
+Velour Tomatoes – Purple|Velour Dungaree|166|80:54,86:60,92:36,98:10,104:6
+Velour Tomatoes – Purple|Velour Pants|388|80:42,86:68,92:74,98:70,104:54,110:30,116:22,122:4,128:6,134:2,140:6,146:2,152:2,158:6
+Velour Tomatoes – Purple|Velour Top|290|80:54,92:90,104:80,116:42,128:8,140:6,152:4,164:6
+Velour Umbrella – Blue|Velour Dungaree|74|80:22,86:24,92:20,98:4,104:4
+Velour Umbrella – Blue|Velour Pants|200|80:12,86:22,92:24,98:26,104:26,110:20,116:16,122:6,128:8,134:4,140:6,146:2,152:4,158:6,L:4,M:4,S:4,XL:4,XXL:2
+Velour Umbrella – Blue|Velour Top|160|80:20,92:40,104:36,116:22,128:8,140:6,152:4,164:6,L:4,M:4,S:4,XL:4,XXL:2
+Velour Umbrella – Green|Velour Dungaree|68|80:20,86:20,92:20,98:4,104:4
+Velour Umbrella – Green|Velour Pants|126|80:10,86:16,92:18,98:16,104:18,110:12,116:12,122:2,128:6,134:2,140:6,146:2,152:2,158:4
+Velour Umbrella – Green|Velour Top|110|80:20,92:28,104:24,116:18,128:6,140:6,152:4,164:4`;
+
+// ─────────────────────────────────────────────
+//  Parse static data
+// ─────────────────────────────────────────────
+const records = RAW.trim().split("\n").map(line => {
+  const [colour, style, total, sizesStr] = line.split("|");
+  const sizes = {};
+  if (sizesStr) {
+    sizesStr.split(",").forEach(p => {
+      const [sz, q] = p.split(":");
+      sizes[sz] = Number(q);
+    });
+  }
+  return { colour, style, total: Number(total), sizes };
+});
+
+function key(c, s) { return c + "||" + s; }
+// Firestore doc IDs cannot contain '/' so we encode '||' → '__PIPE__'
+function docId(k) { return k.replace(/\|/g, "__PIPE__"); }
+
+const recByKey = {};
+records.forEach(r => recByKey[key(r.colour, r.style)] = r);
+
+// ─────────────────────────────────────────────
+//  In-memory log  (mirrored from Firestore)
+// ─────────────────────────────────────────────
+let log = {};   // log[key][date][process][size] = qty
+
+// ─────────────────────────────────────────────
+//  Firestore helpers
+// ─────────────────────────────────────────────
+const COLLECTION = "prodLog";
+
+async function saveToFirestore(k) {
+  try {
+    const ref = doc(db, COLLECTION, docId(k));
+    if (!log[k] || Object.keys(log[k]).length === 0) {
+      // Delete doc if no entries remain
+      await setDoc(ref, { _empty: true });
+    } else {
+      await setDoc(ref, { data: JSON.stringify(log[k]) });
+    }
+    setSyncState("online", "✓ Saved to Firebase");
+  } catch (e) {
+    setSyncState("error", "⚠ Save failed: " + e.message);
+    console.error(e);
+  }
+}
+
+async function loadAllFromFirestore() {
+  try {
+    setSyncState("connecting", "Loading data from Firebase…");
+    const snap = await getDocs(collection(db, COLLECTION));
+    log = {};
+    snap.forEach(d => {
+      if (d.data()._empty) return;
+      // Reverse docId encoding
+      const k = d.id.replace(/__PIPE__/g, "||");
+      try {
+        log[k] = JSON.parse(d.data().data);
+      } catch (e) { /* skip corrupt */ }
+    });
+    setSyncState("online", "✓ Connected to Firebase  —  " + Object.keys(log).length + " combo(s) loaded");
+    populateViewOptions();
+    renderViewTable();
+    renderEntry();
+  } catch (e) {
+    setSyncState("error", "⚠ Could not load from Firebase: " + e.message);
+    console.error(e);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  DOM wiring
+// ─────────────────────────────────────────────
+const colourSel         = document.getElementById("colourSel");
+const styleSel          = document.getElementById("styleSel");
+const dateSel           = document.getElementById("dateSel");
+const entryTable        = document.getElementById("entryTable");
+const saveStatus        = document.getElementById("saveStatus");
+const viewDropdownBtn   = document.getElementById("viewDropdownBtn");
+const viewDropdownPanel = document.getElementById("viewDropdownPanel");
+const ddOptions         = document.getElementById("ddOptions");
+const viewTable         = document.getElementById("viewTable");
+let   viewSelected      = new Set();
+const viewCount         = document.getElementById("viewCount");
+const statusMsg         = document.getElementById("statusMsg");
+
+const colours = [...new Set(records.map(r => r.colour))].sort();
+colours.forEach(c => {
+  const o = document.createElement("option");
+  o.value = c; o.textContent = c;
+  colourSel.appendChild(o);
+});
+
+function populateStyles() {
+  const c = colourSel.value;
+  const styles = records.filter(r => r.colour === c).map(r => r.style);
+  styleSel.innerHTML = "";
+  styles.forEach(s => {
+    const o = document.createElement("option");
+    o.value = s; o.textContent = s;
+    styleSel.appendChild(o);
+  });
+  renderEntry();
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+dateSel.value = todayStr();
+
+function currentRecord() { return recByKey[key(colourSel.value, styleSel.value)]; }
+
+function renderEntry() {
+  const rec = currentRecord();
+  if (!rec) { entryTable.innerHTML = ""; return; }
+  const sizes = SIZE_ORDER.filter(sz => rec.sizes[sz] !== undefined);
+  const k = key(rec.colour, rec.style);
+  const d = dateSel.value;
+  const existing = (log[k] && log[k][d]) || {};
+
+  let html = "<thead><tr><th>Row</th>";
+  sizes.forEach(sz => html += `<th>${sz}</th>`);
+  html += "<th>Total</th></tr></thead><tbody>";
+
+  html += `<tr class="orderrow"><td>Order Qty</td>`;
+  sizes.forEach(sz => html += `<td>${rec.sizes[sz]}</td>`);
+  html += `<td>${rec.total}</td></tr>`;
+
+  PROCESSES.forEach(p => {
+    html += `<tr class="procrow"><td>${p}</td>`;
+    sizes.forEach(sz => {
+      const val = (existing[p] && existing[p][sz] !== undefined) ? existing[p][sz] : "";
+      html += `<td><input type="number" min="0" data-proc="${p}" data-size="${sz}" value="${val}"></td>`;
+    });
+    html += `<td></td></tr>`;
+  });
+  html += "</tbody>";
+  entryTable.innerHTML = html;
+  saveStatus.textContent = "";
+}
+
+colourSel.addEventListener("change", populateStyles);
+styleSel.addEventListener("change", renderEntry);
+dateSel.addEventListener("change", renderEntry);
+colourSel.value = colours[0];
+populateStyles();
+
+// ── Save ──
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const rec = currentRecord();
+  if (!rec) return;
+  const k = key(rec.colour, rec.style);
+  const d = dateSel.value;
+  if (!d) { saveStatus.textContent = "Pick a date first."; return; }
+
+  const entry = {};
+  entryTable.querySelectorAll("input").forEach(inp => {
+    const p = inp.dataset.proc, sz = inp.dataset.size;
+    if (inp.value !== "") {
+      if (!entry[p]) entry[p] = {};
+      entry[p][sz] = Number(inp.value);
+    }
+  });
+
+  if (!log[k]) log[k] = {};
+  log[k][d] = entry;
+
+  saveStatus.textContent = "Saving…";
+  document.getElementById("saveBtn").disabled = true;
+
+  await saveToFirestore(k);
+
+  saveStatus.textContent = "Saved for " + d + ".";
+  document.getElementById("saveBtn").disabled = false;
+
+  populateViewOptions();
+  renderViewTable();
+});
+
+// ── Delete ──
+document.getElementById("deleteBtn").addEventListener("click", async () => {
+  const rec = currentRecord();
+  if (!rec) return;
+  const k = key(rec.colour, rec.style);
+  const d = dateSel.value;
+  if (log[k] && log[k][d]) {
+    delete log[k][d];
+    if (Object.keys(log[k]).length === 0) delete log[k];
+
+    saveStatus.textContent = "Deleting…";
+    await saveToFirestore(k);
+
+    saveStatus.textContent = "Deleted entry for " + d + ".";
+    renderEntry();
+    populateViewOptions();
+    renderViewTable();
+  } else {
+    saveStatus.textContent = "No entry for this date.";
+  }
+});
+
+// ─────────────────────────────────────────────
+//  View panel
+// ─────────────────────────────────────────────
+function loggedCombos() {
+  return Object.keys(log).filter(k => Object.keys(log[k]).length > 0);
+}
+
+function populateViewOptions() {
+  const valid = new Set(loggedCombos());
+  [...viewSelected].forEach(k => { if (!valid.has(k)) viewSelected.delete(k); });
+  ddOptions.innerHTML = "";
+  loggedCombos().sort().forEach(k => {
+    const rec = recByKey[k];
+    const dateList = Object.keys(log[k]).sort().join(", ");
+    const row = document.createElement("label");
+    row.className = "ddopt";
+    row.innerHTML = `<input type="checkbox" value="${k}" ${viewSelected.has(k) ? "checked" : ""}> ${rec.colour} — ${rec.style} (${dateList})`;
+    row.querySelector("input").addEventListener("change", (e) => {
+      if (e.target.checked) viewSelected.add(k); else viewSelected.delete(k);
+      updateDropdownLabel();
+      renderViewTable();
+    });
+    ddOptions.appendChild(row);
+  });
+  updateDropdownLabel();
+}
+
+function updateDropdownLabel() {
+  const n = viewSelected.size;
+  viewDropdownBtn.firstChild.textContent = n === 0 ? "All entries " : (n + " selected ");
+}
+
+viewDropdownBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  viewDropdownPanel.hidden = !viewDropdownPanel.hidden;
+});
+document.addEventListener("click", (e) => {
+  if (!viewDropdownPanel.hidden && !document.getElementById("viewDropdown").contains(e.target)) {
+    viewDropdownPanel.hidden = true;
+  }
+});
+
+function processQty(k, d, p) {
+  const sizesObj = log[k] && log[k][d] && log[k][d][p];
+  if (!sizesObj || !Object.keys(sizesObj).length) return "";
+  return Object.values(sizesObj).reduce((a, b) => a + b, 0);
+}
+
+function renderViewTable() {
+  const keys = [...viewSelected];
+  const useKeys = keys.length ? keys : loggedCombos();
+  const rows = [];
+  useKeys.sort().forEach(k => {
+    const rec = recByKey[k];
+    const dates = Object.keys(log[k] || {}).sort();
+    dates.forEach(d => {
+      rows.push([rec.colour, rec.style, d, ...PROCESSES.map(p => processQty(k, d, p))]);
+    });
+  });
+  if (!rows.length) {
+    viewTable.innerHTML = "";
+    viewCount.textContent = "No logged entries yet.";
+    return;
+  }
+  let html = "<thead><tr><th>Print Colour</th><th>Style</th><th>Date</th><th>Cutting</th><th>Sewing</th><th>Final Checking</th><th>Rejection/Rework</th></tr></thead><tbody>";
+  rows.forEach(r => {
+    html += "<tr>" + r.map(v => `<td>${v}</td>`).join("") + "</tr>";
+  });
+  html += "</tbody>";
+  viewTable.innerHTML = html;
+  viewCount.textContent = rows.length + " logged rows shown.";
+}
+
+document.getElementById("selectAllBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  loggedCombos().forEach(k => viewSelected.add(k));
+  populateViewOptions();
+  renderViewTable();
+});
+document.getElementById("clearSelBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  viewSelected.clear();
+  populateViewOptions();
+  renderViewTable();
+});
+
+// ─────────────────────────────────────────────
+//  Export
+// ─────────────────────────────────────────────
+function buildTrackingRows(combosKeys) {
+  const headers = ["PRINT COLOUR", "STYLE", "PROCESS", ...SIZE_ORDER, "TOTAL"];
+  const rows = [headers];
+  combosKeys.forEach(k => {
+    const rec = recByKey[k];
+    if (!rec) return;
+    rows.push([rec.colour, rec.style, "", ...SIZE_ORDER.map(sz => rec.sizes[sz] !== undefined ? rec.sizes[sz] : ""), rec.total]);
+    PROCESSES.forEach(p => {
+      const cellVals = SIZE_ORDER.map(sz => {
+        let sum = null;
+        const dates = log[k] || {};
+        Object.keys(dates).forEach(d => {
+          const v = dates[d][p] && dates[d][p][sz];
+          if (v !== undefined) { sum = (sum || 0) + v; }
+        });
+        return sum === null ? "" : sum;
+      });
+      rows.push(["", "", p, ...cellVals, ""]);
+    });
+  });
+  return rows;
+}
+
+function buildLogRows(combosKeys) {
+  const rows = [["Print Colour", "Style", "Date", "Cutting", "Sewing", "Final Checking", "Rejection/Rework"]];
+  const seen = [];
+  combosKeys.sort().forEach(k => {
+    const rec = recByKey[k];
+    if (!rec) return;
+    const dates = Object.keys(log[k] || {}).sort();
+    dates.forEach(d => seen.push([k, rec, d]));
+  });
+  seen.forEach(([k, rec, d]) => {
+    rows.push([rec.colour, rec.style, d, ...PROCESSES.map(p => processQty(k, d, p))]);
+  });
+  return rows;
+}
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  statusMsg.textContent = "Building workbook…";
+  try {
+    if (window.__xlsxLoadFailed || typeof XLSX === "undefined") {
+      statusMsg.textContent = "Couldn't load the Excel library (network blocked?). Try reloading the page.";
+      return;
+    }
+    const selected = [...viewSelected];
+    const trackingKeys = selected.length ? selected : records.map(r => key(r.colour, r.style));
+    const logKeys      = selected.length ? selected : loggedCombos();
+
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.aoa_to_sheet(buildTrackingRows(trackingKeys));
+    ws1["!cols"] = [{ wch: 26 }, { wch: 24 }, { wch: 16 }, ...SIZE_ORDER.map(() => ({ wch: 6 })), { wch: 9 }];
+    XLSX.utils.book_append_sheet(wb, ws1, "Production Tracking");
+
+    const ws2 = XLSX.utils.aoa_to_sheet(buildLogRows(logKeys));
+    ws2["!cols"] = [{ wch: 26 }, { wch: 24 }, { wch: 12 }, { wch: 9 }, { wch: 9 }, { wch: 14 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Daily Log");
+
+    const arrBuf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob   = new Blob([arrBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+    // Standard browser download (no Claude API needed)
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href     = url;
+    link.download = "Production_Tracking.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    statusMsg.textContent = "File downloaded!";
+  } catch (err) {
+    statusMsg.textContent = "Error: " + (err && err.message || "unknown");
+    console.error(err);
+  }
+});
+
+// ─────────────────────────────────────────────
+//  Bootstrap — load data from Firestore
+// ─────────────────────────────────────────────
+await loadAllFromFirestore();
+
+</script>
+</body>
+</html>
