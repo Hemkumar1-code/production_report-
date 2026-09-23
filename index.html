@@ -584,11 +584,14 @@ let log = {};
 //  Firestore helpers
 // ─────────────────────────────────────────────────────────────
 async function saveLogToFirestore(k){
+  // Update localStorage cache immediately (instant for next load)
+  try{ localStorage.setItem("pt_prodLog", JSON.stringify(log)); }catch(e){}
+  // Then push to Firebase in background
   try{
     const ref=doc(db,"prodLog",docId(k));
     await setDoc(ref,{ data: (!log[k]||!Object.keys(log[k]).length) ? "" : JSON.stringify(log[k]) });
     setSyncState("online","✓ Saved to Firebase");
-  }catch(e){ setSyncState("error","⚠ Save failed: "+e.message); }
+  }catch(e){ setSyncState("error","⚠ Save failed (data kept locally): "+e.message); }
 }
 
 async function saveOrderToFirestore(recs, label){
@@ -600,40 +603,76 @@ async function saveOrderToFirestore(recs, label){
 }
 
 async function loadAll(){
-  setSyncState("connecting","Loading data from Firebase…");
+  // ── Step 1: INSTANT load from localStorage cache (app usable immediately) ──
   try{
-    // 1. Try to load custom order config
-    const orderSnap = await getDoc(doc(db,"orderConfig","current"));
-    if(orderSnap.exists() && orderSnap.data().records){
-      records = JSON.parse(orderSnap.data().records);
+    const cachedOrder = localStorage.getItem("pt_orderConfig");
+    if(cachedOrder){
+      const o = JSON.parse(cachedOrder);
+      records = o.records;
       usingCustomOrder = true;
-      updateOrderBadge(orderSnap.data().label || "Custom Upload");
+      updateOrderBadge(o.label || "Custom Upload");
     } else {
       records = parseDefaultRaw(DEFAULT_RAW);
       usingCustomOrder = false;
       updateOrderBadge(null);
     }
+  }catch(e){
+    records = parseDefaultRaw(DEFAULT_RAW);
+    updateOrderBadge(null);
+  }
+  try{
+    const cachedLog = localStorage.getItem("pt_prodLog");
+    if(cachedLog) log = JSON.parse(cachedLog);
+  }catch(e){ log = {}; }
+
+  // Show app immediately with cached data
+  buildLookup();
+  rebuildColourDropdown();
+  populateViewOptions();
+  renderViewTable();
+  renderEntry();
+  setSyncState("connecting","⟳ Syncing with Firebase in background…");
+
+  // ── Step 2: Firebase sync in background (non-blocking) ──
+  try{
+    // Load custom order config
+    const orderSnap = await getDoc(doc(db,"orderConfig","current"));
+    if(orderSnap.exists() && orderSnap.data().records){
+      const newRecs = JSON.parse(orderSnap.data().records);
+      const label   = orderSnap.data().label || "Custom Upload";
+      localStorage.setItem("pt_orderConfig", JSON.stringify({records:newRecs,label}));
+      records = newRecs;
+      usingCustomOrder = true;
+      updateOrderBadge(label);
+    } else {
+      localStorage.removeItem("pt_orderConfig");
+      if(usingCustomOrder){
+        records = parseDefaultRaw(DEFAULT_RAW);
+        usingCustomOrder = false;
+        updateOrderBadge(null);
+      }
+    }
     buildLookup();
     rebuildColourDropdown();
 
-    // 2. Load production log
+    // Load production log
     const logSnap = await getDocs(collection(db,"prodLog"));
-    log={};
+    const fbLog = {};
     logSnap.forEach(d=>{
       if(!d.data().data) return;
       const k=d.id.replace(/__PIPE__/g,"||");
-      try{ log[k]=JSON.parse(d.data().data); }catch(e){}
+      try{ fbLog[k]=JSON.parse(d.data().data); }catch(e){}
     });
-    setSyncState("online","✓ Connected to Firebase — "+Object.keys(log).length+" combo(s) logged");
+    // Merge: Firebase wins over cache
+    log = fbLog;
+    localStorage.setItem("pt_prodLog", JSON.stringify(log));
+
+    setSyncState("online","✓ Firebase synced — "+Object.keys(log).length+" combo(s) logged");
     populateViewOptions();
     renderViewTable();
     renderEntry();
   }catch(e){
-    setSyncState("error","⚠ Could not load from Firebase: "+e.message);
-    records=parseDefaultRaw(DEFAULT_RAW);
-    buildLookup();
-    rebuildColourDropdown();
-    updateOrderBadge(null);
+    setSyncState("error","⚠ Firebase sync failed (using cached data) — "+e.message);
   }
 }
 
